@@ -1,0 +1,200 @@
+% ISS presentation template
+%
+% Change history:
+% 24.06.2010    Jürgen Ruoff        Initial creation
+% 01.07.2010    Patrick Häcker      Generalization
+% 02.07.2010    Patrick Häcker      Adjustment
+% 15.11.2010    Patrick Häcker      Improvements
+% 20.05.2011    Patrick Häcker      Add presentation type
+% 06.01.2012	P. Hermannstädter 	Adapted to ISS, small mods
+% 15.07.2019 	A. Bartler			Minor fixes, 16:9 aspect ratio added 
+
+
+
+% Insert your name here
+\newcommand{\presenter}{LONGPRESENTERNAME}
+\newcommand{\presentershort}{SHORTPRESENTERNAME}
+\newcommand{\presenteremail}{PRESENTERMAIL} 		% can be accessed using \presenteremail
+
+% Insert presentation title here
+\newcommand{\presentationtitle}{TITLE}
+\newcommand{\shortpresentationtitle}{TITLEshortBOTTOM}
+
+% Insert type of presentation here (or comment line), probably one of:
+% Mitarbeitervortrag, Bachelor-Arbeit, Master-Arbeit, Bachelor thesis, Master thesis
+\newcommand{\presentationtype}{SUBTITLE}
+
+% Insert presentation date here
+\newcommand{\presentationdate}{MM.DD.YYYY}
+
+% Define the language by uncommenting. If there is an error, try deleting temporary files (*.log, ...)
+%\newcommand{\lang}{ngerman}
+\newcommand{\lang}{english}
+
+% Uncomment the following line, if you want to create handouts (setting to false does not work!)
+%\newcommand{\handoutmode}{true}
+
+% Define aspect ratio to  16:9 or 4:3 by uncommenting
+%\newcommand{\aspectratio}{43}
+\newcommand{\aspectratio}{169}
+
+
+% Load beamer class using LSS style
+\input{presentation}
+
+\usepackage{setspace}
+
+% My commands:
+
+% -----------------------------------------------------------------------------
+% -----------------------------------------------------------------------------
+\begin{document}
+\lstset{basicstyle=\small\ttfamily,xleftmargin=15pt,language=Python,
+        commentstyle=\color{green},showstringspaces=false,stringstyle=\color{magenta}\ttfamily}
+
+% -----------------------------------------------------------------------------
+% This is the title page
+\begin{frame}[t,plain]
+	\titlepage
+\end{frame}
+
+
+% -----------------------------------------------------------------------------
+% Motivation slide
+\begin{frame}[t]{Motivation}
+	\lstinline">> why"\\
+	\lstinline"To fool the tall good and smart system manager."
+\end{frame}
+
+
+% -----------------------------------------------------------------------------
+% This is the table of contents. You can insert a motivation before or after this slide.
+\begin{frame}
+	\ifthenelse{\equal{\lang}{ngerman}}{
+		\frametitle{Inhaltsverzeichnis}
+	}{
+		\frametitle{Table of Contents}
+	}
+	\tableofcontents
+\end{frame}
+
+% Add an extra slide at the beginning of each section while highlighting the current section
+% Use \section* to skip the slide once or comment the following to skip all overview slides.
+\AtBeginSection[]
+{
+	\begin{frame}<beamer>
+		\ifthenelse{\equal{\lang}{ngerman}}{
+			\frametitle{Inhaltsverzeichnis}
+		}{
+			\frametitle{Table of Contents}
+		}
+% 		\frametitle{\contentsname}
+		\tableofcontents[currentsection]
+	\end{frame}
+}
+
+%% =========
+\section{Section Itemize}
+\subsection{First Subsection Itemize}
+% -----------------------------------------------------------------------------
+\begin{frame}[t]{Without pause}
+
+\begin{itemize}
+	\item Lorem:\\
+	\begin{itemize}
+		\item Ipsum
+		\item Dolor
+	\end{itemize}
+\end{itemize}
+\end{frame}
+\subsection{Second Subsection Itemize with pause}
+% -----------------------------------------------------------------------------
+
+\begin{frame}[t]{With pause}
+	
+	\begin{itemize}
+		\item Lorem:\\
+		\begin{itemize}
+			\item Ipsum
+			\item Dolor
+		\end{itemize}
+	\end{itemize}
+	\pause
+	\begin{itemize}
+		\item Lorem 2:\\
+		\begin{itemize}
+			\item Ipsum 2
+			\item Dolor 2
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+\subsection{Third subsection Itemize with <>}
+\begin{frame}[t]{With <>}
+		\begin{itemize}
+			\item<1-> Ipsum
+			\item<2-> Dolor
+			\item<3-4> Ipsum 3-4
+			\item<4-> Dolor
+			\item<5-> Ipsum 
+		\end{itemize}
+
+\end{frame}
+\section{Figures and Tables}
+\subsection{Figures}
+\begin{frame}[t]{Figures}
+	\begin{figure}
+\centering
+\includegraphics[width=0.3\linewidth]{university-logo}
+\caption{Test}
+\label{fig:university-logo}
+\end{figure}
+\end{frame}
+\subsection{Tables}
+\begin{frame}[t]{Tables}
+\begin{table}[]
+	\caption{Example LaTeX Table} 
+	\label{tab:example}
+	\centering % center the table
+	\begin{tabular}{lccr} % alignment of each column data
+		\toprule
+		\textbf{Header 1} & \textbf{Header 2} & \textbf{Header 3} & \textbf{Header 4} \\ 
+		\midrule
+		Item 1 & Item 2 & Item 3 & Item 4 \\
+		Item 1 & Item 2 & Item 3 & Item 4\\
+		\bottomrule 
+	\end{tabular}
+\end{table}
+\end{frame}
+
+\section{More}
+\subsection{Math mode}
+\begin{frame}[t]{Math}
+	\begin{equation}
+	A^2 + B^2 = C^2
+	\end{equation}
+	or without numbering 
+	\begin{equation*}
+	D = 2r
+	\end{equation*}
+\end{frame}
+\subsection{Multicolumn}
+\begin{frame}[c]{Multicolumn}
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			some text here some text here some text here some text here some text here
+		\end{column}
+		\begin{column}{0.5\textwidth}  %%<--- here
+			\begin{center}
+				\begin{figure}
+					\includegraphics[width=0.5\textwidth]{university-logo}
+					\caption{Some figure}
+				\end{figure}
+				
+			\end{center}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+
+
+\end{document}
