@@ -5,16 +5,16 @@
 |               Prof. Dr.-Ing. B. Yang              |
 |![](media/isslogocolor.gif)                        |
 
-# Bachelor's thesis / Resarch thesis / Master's thesis (Sxxx / Dxxxx)
+# Resarch thesis (S1465)
 
 # Title of the thesis
 ## Student
-| Name       | Max Mustermann                   |
+| Name       | Artur Leonhardt                   |
 |------------|----------------------------------|
 | Major      | Elektro- und Informationstechnik |
-| Begin      | xx.xx.xxxx                       |
-| End        | xx.xx.xxxx                       |
-| Supervisor | xxxx                             |
+| Begin      | 14.04.2024                       |
+| End        | 14.10.2024                       |
+| Supervisor | Marius Winter                             |
 
 ## Abstract
 Put your abstract here.
