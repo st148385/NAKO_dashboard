@@ -4,7 +4,7 @@ utils package
 Submodules
 ----------
 
-utils.utils module
+utils
 ------------------
 
 .. automodule:: utils.utils
