@@ -1,22 +1,10 @@
 def utils_func1(param1: str, param2: str) -> int:
-    """_summary_
+	"""_summary_
 
-    Args:
-        param1 (str): _description_
-        param2 (str): _description_
-
-    Returns:
-        int: _description_
-    """
-
-
-def utils_func2(param1: str, param2: str) -> int:
-    """_summary_
-
-    Args:
-        param1 (str): _description_
-        param2 (str): _description_
-
-    Returns:
-        int: _description_
-    """
+	:param param1: _description_
+	:type param1: str
+	:param param2: _description_
+	:type param2: str
+	:return: _description_
+	:rtype: int
+	"""
