@@ -8,7 +8,8 @@ def utils_func1(param1: str, param2: str) -> int:
     Returns:
         int: _description_
     """
-    
+
+
 def utils_func2(param1: str, param2: str) -> int:
     """_summary_
 
