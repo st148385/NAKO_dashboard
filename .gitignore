@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 
 # Ignore DOCS folder for now...
-src/docs
+src/docs/_build
