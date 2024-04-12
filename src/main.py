@@ -1,2 +1,2 @@
 def main() -> None:
-    return
+	return

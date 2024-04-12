@@ -10,7 +10,9 @@ Welcome to Research-Thesis's documentation!
    :maxdepth: 2
    :caption: Contents:
    
+   intro
    modules
+   examples
 
 
 Indices and tables
