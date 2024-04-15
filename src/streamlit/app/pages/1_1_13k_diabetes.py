@@ -28,6 +28,7 @@ if data_path:
 	col1, col2 = st.columns(2)
 	with col1:
 		option = st.selectbox("Choose the attribute you wish to get more info about.", features)
+
 	with col2:
 		attr_info = extract_infos_given_datapath(data_path, description_file=data_description_path)
 		st.markdown("""

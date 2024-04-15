@@ -5,10 +5,14 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import streamlit as st
 from bs4 import BeautifulSoup
+
+sns.set_theme()
 
 
 @st.cache_data
@@ -42,8 +46,12 @@ def extract_infos_given_datapath(data_path: Union[str, Path], description_file: 
 		feature_information_text = get_information_from_html_file(feature=feat, soup=soup)
 		# Get stats
 		feature_stats = get_data_stats(data[feat])
+		# Get plots
 
-		temp_dict = {"feature_information_text": feature_information_text, "feature_stats": feature_stats}
+		temp_dict = {
+			"feature_information_text": feature_information_text,
+			"feature_stats": feature_stats,
+		}
 		feature_description[feat] = temp_dict
 
 	return feature_description
@@ -109,3 +117,19 @@ def get_data_stats(feature_series: pd.Series) -> Dict[str, Any]:
 	feature_stats["median"] = feature_series.median()
 
 	return feature_stats
+
+
+def create_distribution_plot(data_count: Dict[int, int]) -> plt.Figure:
+	"""_summary_
+
+	:param values: _description_
+	:type values: NDArray
+	:param counts: _description_
+	:type counts: NDArray
+	:return: _description_
+	:rtype: plt.Figure
+	"""
+	values, counts = data_count.keys(), data_count.values()
+	fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+	ax.bar(values, counts)
+	return fig
