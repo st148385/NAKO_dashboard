@@ -19,11 +19,6 @@ st.header("30 K metadata dataset", divider=True)
 if data_path:
 	st.markdown("Overview of the data")
 	data = pd.read_csv(data_path, sep=";", encoding="latin1", quoting=csv.QUOTE_NONE)
-	st.write(data.head())
-	# with open(data_description_path, "r") as data_description_json:
-	# 	data_description = json.load(data_description_json)
-
-	# Start from 11 to discard "ID" as attribute
 	features = data.columns[1:]
 	col1, col2 = st.columns(2)
 	with col1:
@@ -42,4 +37,9 @@ if data_path:
 	# Get values and corresponding counts from attr_info
 	data_distribution = attr_info[option].get("feature_stats").get("data_distribution", False)
 	if data_distribution:
+		st.warning("""
+			The X-values have been squashed together to show in one plot and do not necessarily show the true spaces.
+			This results from the labeling convention
+			(e.g. some values are 1 and some are 9999).
+			""")
 		st.pyplot(create_distribution_plot(data_distribution))

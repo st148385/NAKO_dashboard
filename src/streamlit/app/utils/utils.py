@@ -117,7 +117,7 @@ def get_data_stats(feature_series: pd.Series, feature_mapping: Dict[int, str]) -
 	if np.issubdtype(feature_series.dtype, int):
 		values, counts = np.unique(series_arr, return_counts=True)
 		feature_stats["data_distribution"] = {
-			int(k): {"count": int(v), "name": feature_mapping.get(int(k), k)} for k, v in zip(values, counts)
+			int(k): {"count": int(v), "name": feature_mapping.get(int(k), int(k))} for k, v in zip(values, counts)
 		}
 
 	feature_stats["mean"] = feature_series.mean()
@@ -160,12 +160,24 @@ def create_distribution_plot(data_distribution: Dict[int, Dict[str, Any]]) -> pl
 	"""
 
 	counts = [data_point["count"] for data_point in data_distribution.values()]
-	# label_names = [data_point["name"] for data_point in data_distribution.values()]
+	label_names = [data_point["name"] for data_point in data_distribution.values()]
+
+	tick_control_parameter = 1 if len(counts) <= 10 else 10
+
 	x_ticks = range(len(counts))
+	label_values = [label for label in data_distribution]
 
 	fig, ax = plt.subplots(1, 1, figsize=(8, 5))
 	ax.bar(x_ticks, counts)
 	ax.set_ylabel("Data count")
-	ax.set_xlabel("Label value")
+	# ax.set_xlabel("Label value")
 	ax.set_title("Class distribution")
+	ax.set_xticks(x_ticks[::tick_control_parameter])
+	ax.set_xticklabels(label_names[::tick_control_parameter])
+
+	for tick, label_name, label_value in zip(ax.get_xticklabels(), label_names, label_values):
+		if np.issubdtype(type(label_name), str):
+			tick.set_text(f"{tick.get_text()} ({label_value})")
+			tick.set_rotation(90)
+
 	return fig
