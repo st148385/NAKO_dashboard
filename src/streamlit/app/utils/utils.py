@@ -114,7 +114,9 @@ def get_data_stats(feature_series: pd.Series, feature_mapping: Dict[int, str]) -
 	series_arr = np.array(feature_series)
 	feature_stats["max"] = feature_series.max()
 	feature_stats["min"] = feature_series.min()
-	if np.issubdtype(feature_series.dtype, int):
+	# Sometimes discrete values are something saved as float (e.g. d_an_msart1b)
+	# TODO this might be handled differently by clearing the dataset e.g. some casting beforehand
+	if np.issubdtype(feature_series.dtype, int) or len(np.unique(series_arr)) < 30:
 		values, counts = np.unique(series_arr, return_counts=True)
 		feature_stats["data_distribution"] = {
 			int(k): {"count": int(v), "name": feature_mapping.get(int(k), int(k))} for k, v in zip(values, counts)
