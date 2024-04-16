@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from utils.utils import extract_infos_given_datapath
+from utils.utils import create_distribution_plot, extract_infos_given_datapath
 
 # Hardcoding the data paths for now, might change in future
 # data_path = st.file_uploader("Select folder containing data information")
@@ -29,10 +29,17 @@ if data_path:
 	with col1:
 		option = st.selectbox("Choose the attribute you wish to get more info about.", features)
 
+	attr_info = extract_infos_given_datapath(
+		data_path=data_path, description_file=data_description_path, metadata_path=metadata_path
+	)
 	with col2:
-		attr_info = extract_infos_given_datapath(data_path, description_file=data_description_path)
 		st.markdown("""
 			**Data Description:**
 					""")
 		st.markdown(f"{attr_info[option].get('feature_information_text')}")
 		st.write(attr_info[option].get("feature_stats"))
+
+	# Get values and corresponding counts from attr_info
+	data_distribution = attr_info[option].get("feature_stats").get("data_distribution", False)
+	if data_distribution:
+		st.pyplot(create_distribution_plot(data_distribution))

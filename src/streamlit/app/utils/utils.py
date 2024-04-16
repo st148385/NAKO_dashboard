@@ -16,7 +16,9 @@ sns.set_theme()
 
 
 @st.cache_data
-def extract_infos_given_datapath(data_path: Union[str, Path], description_file: Union[str, Path]) -> Dict[str, Any]:
+def extract_infos_given_datapath(
+	data_path: Union[str, Path], description_file: Union[str, Path], metadata_path: Union[str, Path]
+) -> Dict[str, Any]:
 	"""This function is used to search for the description of a specific feature given some
 	data.
 
@@ -27,6 +29,8 @@ def extract_infos_given_datapath(data_path: Union[str, Path], description_file: 
 	:type data_path: Union[str, Path]
 	:param description_file: HTML file containing the data information
 	:type description_file: Union[str, Path]
+	:param metadata_path: path to the metadata file
+	:type metadata_path: Union[str, Path]
 	:return: Dictionary with {feature: description} where description describes what the feature tells
 	:rtype: Dict[str, Any]
 	"""
@@ -40,12 +44,15 @@ def extract_infos_given_datapath(data_path: Union[str, Path], description_file: 
 		html_content = file.read()
 
 	soup = BeautifulSoup(html_content, "html.parser")
-	##
+	metadata = pd.read_csv(metadata_path, sep=";", on_bad_lines="skip")
+	metadata.dropna(inplace=True)
+	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	for feat in features:
 		# Get info text
 		feature_information_text = get_information_from_html_file(feature=feat, soup=soup)
 		# Get stats
-		feature_stats = get_data_stats(data[feat])
+		feature_mapping = mapping_dict.get(feat, {})
+		feature_stats = get_data_stats(data[feat], feature_mapping=feature_mapping)
 		# Get plots
 
 		temp_dict = {
@@ -80,12 +87,13 @@ def get_information_from_html_file(feature: str, soup: BeautifulSoup) -> str:
 
 
 # TODO some calculations are still somehow wrong and don't match the HTML file
-# TODO e.g. anthro_hueftumfang gets a max val of 9999 which does not make any sense...
-def get_data_stats(feature_series: pd.Series) -> Dict[str, Any]:
+def get_data_stats(feature_series: pd.Series, feature_mapping: Dict[int, str]) -> Dict[str, Any]:
 	"""Calculate data stats and store in dict
 
 	:param feature_series: Data for a specific feature
 	:type feature_series: pd.Series
+	:param metadata_path: path to the metadata file
+	:type metadata_path: Union[str, Path]
 	:return: Dict holding information of data
 	:rtype: Dict[str, Any]
 	"""
@@ -108,7 +116,9 @@ def get_data_stats(feature_series: pd.Series) -> Dict[str, Any]:
 	feature_stats["min"] = feature_series.min()
 	if np.issubdtype(feature_series.dtype, int):
 		values, counts = np.unique(series_arr, return_counts=True)
-		feature_stats["data_count"] = {int(k): v for k, v in zip(values, counts)}
+		feature_stats["data_distribution"] = {
+			int(k): {"count": int(v), "name": feature_mapping.get(int(k), k)} for k, v in zip(values, counts)
+		}
 
 	feature_stats["mean"] = feature_series.mean()
 	feature_stats["std"] = feature_series.std()
@@ -119,7 +129,26 @@ def get_data_stats(feature_series: pd.Series) -> Dict[str, Any]:
 	return feature_stats
 
 
-def create_distribution_plot(data_count: Dict[int, int]) -> plt.Figure:
+def get_mapping_from_metadata(metadata: pd.DataFrame) -> Dict[int, Any]:
+	"""_summary_
+
+	:param metadata: dataframe from the metadata where column 0 is the attribute name, column -2 is the attribute value
+		and column -1 is the attribute name
+	:type metadata: pd.DataFrame
+	:return: dict holding all the mappings label_value <--> label_name
+	:rtype: Dict[int, Any]
+	"""
+	mapping_dict = {}
+	feature_names = metadata.iloc[:, 0].unique()
+	for feature in feature_names:
+		temp_df = metadata[metadata.iloc[:, 0] == feature]
+		mapping_dict[feature] = {
+			int(label_value): label_name for (label_value, label_name) in zip(temp_df.iloc[:, -2], temp_df.iloc[:, -1])
+		}
+	return mapping_dict
+
+
+def create_distribution_plot(data_distribution: Dict[int, Dict[str, Any]]) -> plt.Figure:
 	"""_summary_
 
 	:param values: _description_
@@ -129,7 +158,14 @@ def create_distribution_plot(data_count: Dict[int, int]) -> plt.Figure:
 	:return: _description_
 	:rtype: plt.Figure
 	"""
-	values, counts = data_count.keys(), data_count.values()
+
+	counts = [data_point["count"] for data_point in data_distribution.values()]
+	# label_names = [data_point["name"] for data_point in data_distribution.values()]
+	x_ticks = range(len(counts))
+
 	fig, ax = plt.subplots(1, 1, figsize=(8, 5))
-	ax.bar(values, counts)
+	ax.bar(x_ticks, counts)
+	ax.set_ylabel("Data count")
+	ax.set_xlabel("Label value")
+	ax.set_title("Class distribution")
 	return fig

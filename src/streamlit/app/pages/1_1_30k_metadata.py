@@ -29,7 +29,9 @@ if data_path:
 	with col1:
 		option = st.selectbox("Choose the attribute you wish to get more info about.", features)
 
-	attr_info = extract_infos_given_datapath(data_path, description_file=data_description_path)
+	attr_info = extract_infos_given_datapath(
+		data_path=data_path, description_file=data_description_path, metadata_path=metadata_path
+	)
 	with col2:
 		st.markdown("""
 			**Data Description:**
@@ -38,6 +40,6 @@ if data_path:
 		st.write(attr_info[option].get("feature_stats"))
 
 	# Get values and corresponding counts from attr_info
-	data_stats = attr_info[option].get("feature_stats").get("data_count", False)
-	if data_stats:
-		st.pyplot(create_distribution_plot(data_stats))
+	data_distribution = attr_info[option].get("feature_stats").get("data_distribution", False)
+	if data_distribution:
+		st.pyplot(create_distribution_plot(data_distribution))
