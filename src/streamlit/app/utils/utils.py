@@ -150,7 +150,9 @@ def get_mapping_from_metadata(metadata: pd.DataFrame) -> Dict[int, Any]:
 	return mapping_dict
 
 
-def create_distribution_plot(data_distribution: Dict[int, Dict[str, Any]]) -> plt.Figure:
+def create_distribution_plot(
+	data_distribution: Dict[int, Dict[str, Any]], title: str = "Data Distribution"
+) -> plt.Figure:
 	"""_summary_
 
 	:param values: _description_
@@ -173,7 +175,7 @@ def create_distribution_plot(data_distribution: Dict[int, Dict[str, Any]]) -> pl
 	ax.bar(x_ticks, counts)
 	ax.set_ylabel("Data count")
 	# ax.set_xlabel("Label value")
-	ax.set_title("Class distribution")
+	ax.set_title(title)
 	ax.set_xticks(x_ticks[::tick_control_parameter])
 	ax.set_xticklabels(label_names[::tick_control_parameter])
 

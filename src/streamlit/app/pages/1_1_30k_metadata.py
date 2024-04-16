@@ -42,4 +42,4 @@ if data_path:
 			This results from the labeling convention
 			(e.g. some values are 1 and some are 9999).
 			""")
-		st.pyplot(create_distribution_plot(data_distribution))
+		st.pyplot(create_distribution_plot(data_distribution, title=option))
