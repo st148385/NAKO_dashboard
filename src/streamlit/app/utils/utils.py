@@ -165,18 +165,16 @@ def create_distribution_plot(
 	"""
 
 	counts = [data_point["count"] for data_point in data_distribution.values()]
-	label_names = [data_point["name"] for data_point in data_distribution.values()]
-
-	tick_control_parameter = 1 if len(counts) <= 10 else 10
-
-	x_ticks = range(len(counts))
-	label_values = [label for label in data_distribution]
 
 	fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+	x_ticks = range(len(counts))
 	ax.bar(x_ticks, counts)
 	ax.set_ylabel("Data count")
-	# ax.set_xlabel("Label value")
 	ax.set_title(title)
+
+	tick_control_parameter = 1 if len(counts) <= 10 else 10
+	label_names = [data_point["name"] for data_point in data_distribution.values()]
+	label_values = [label for label in data_distribution]
 	ax.set_xticks(x_ticks[::tick_control_parameter])
 	ax.set_xticklabels(label_names[::tick_control_parameter])
 
@@ -190,7 +188,9 @@ def create_distribution_plot(
 
 # TODO there is still bugs e.g. in 13k diabetes, also handling string data etc must take place beforehand....
 # TODO OVERALL a data cleaning must take place, e.g. some values are 9999 and bias the whole stats.
-def compute_correlation_and_plot_data(feature1: str, feature2: str, data: pd.DataFrame) -> Tuple[float, plt.Figure]:
+def compute_correlation_and_plot_data(
+	feature1: str, feature2: str, data: pd.DataFrame, attr_info: Dict[str, Any]
+) -> Tuple[float, plt.Figure]:
 	"""_summary_
 
 	:param feature1: _description_
@@ -205,6 +205,48 @@ def compute_correlation_and_plot_data(feature1: str, feature2: str, data: pd.Dat
 	sub_df = data[data[[feature1, feature2]].ne("").all(axis=1)][[feature1, feature2]]
 	correlation = sub_df.corr()[feature1].iloc[-1]
 
+	# extract feature specific info
+	feature_dict = {}
+	feature_dict["feature1"] = [
+		data_point for data_point in attr_info[feature1]["feature_stats"]["data_distribution"].values()
+	]
+	feature_dict["feature2"] = [data_point for data_point in attr_info[feature2]["feature_stats"]["data_distribution"]]
+
+	fig = create_feature_plot(sub_df[feature1], sub_df[feature2], feature_dict)
+	data_count = len(sub_df)
+	return correlation, fig, data_count
+
+
+def create_feature_plot(feature1_arr, feature2_arr, feature_dict: Dict[str, Any]) -> plt.Figure:
+	"""_summary_
+
+	:param feature1_arr: _description_
+	:type feature1_arr: _type_
+	:param feature2_arr: _description_
+	:type feature2_arr: _type_
+	:param feature_dict: _description_
+	:type feature_dict: Dict[str, Any]
+	:return: _description_
+	:rtype: plt.Figure
+	"""
+
 	fig, ax = plt.subplots(1, 1, figsize=(8, 5))
-	sns.regplot(x=sub_df[feature1], y=sub_df[feature2])
-	return correlation, fig
+	sns.regplot(x=feature1_arr, y=feature2_arr)
+
+	"""
+	# Regulate x ticks
+	tick_control_parameter = 1 if len(feature1_arr) <= 10 else 10
+	ticks = range(len(feature1_arr))
+	label_names = [data_point["name"] for data_point in feature_dict["feature1"].values()]
+	label_values = [label for label in feature_dict[feature1_arr]]
+	ax.set_xticks(ticks[::tick_control_parameter])
+	ax.set_xticklabels(label_names[::tick_control_parameter])
+
+	for tick, label_name, label_value in zip(ax.get_xticklabels(), label_names, label_values):
+		if np.issubdtype(type(label_name), str):
+			tick.set_text(f"{tick.get_text()} ({label_value})")
+			tick.set_rotation(90)
+
+	# feature 1 is x_axis
+	"""
+	return fig

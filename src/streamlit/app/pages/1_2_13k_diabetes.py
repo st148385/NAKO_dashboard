@@ -63,6 +63,7 @@ if root:
 
 	# Maybe additonally calculate the 10 features with the highest correlation.
 	# This might be NOT to computationally problematic since the union of data might be small
-	correlation, fig = compute_correlation_and_plot_data(feature1, feature2, data)
+	correlation, fig, data_count = compute_correlation_and_plot_data(feature1, feature2, data)
 	st.pyplot(fig)
 	st.write(f"Correlation: {correlation}")
+	st.write(f"Data amount used: {data_count}")
