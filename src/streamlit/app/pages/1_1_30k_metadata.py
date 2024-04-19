@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from utils.utils import create_distribution_plot, extract_infos_given_datapath
+from utils.utils import compute_correlation_and_plot_data, create_distribution_plot, extract_infos_given_datapath
 
 # Hardcoding the data paths for now, might change in future
 # data_path = st.file_uploader("Select folder containing data information")
@@ -49,3 +49,19 @@ if root:
 			This results from the labeling convention
 			(e.g. some values are 1 and some are 9999).
 			""")
+
+	# --------------------------------
+	st.header("Correlation", divider=True)
+
+	# Select features to compute correlation, and plot against each other
+	col3, col4 = st.columns(2)
+	with col3:
+		feature1 = st.selectbox("First feature:", features, key="FeatureCorr1")
+	with col4:
+		feature2 = st.selectbox("Second feature", features, key="FeatureCorr2")
+
+	# Maybe additonally calculate the 10 features with the highest correlation.
+	# This might be NOT to computationally problematic since the union of data might be small
+	correlation, fig = compute_correlation_and_plot_data(feature1, feature2, data)
+	st.pyplot(fig)
+	st.write(f"Correlation: {correlation}")

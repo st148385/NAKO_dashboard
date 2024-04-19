@@ -3,7 +3,7 @@
 import csv
 import re
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -186,3 +186,25 @@ def create_distribution_plot(
 			tick.set_rotation(90)
 
 	return fig
+
+
+# TODO there is still bugs e.g. in 13k diabetes, also handling string data etc must take place beforehand....
+# TODO OVERALL a data cleaning must take place, e.g. some values are 9999 and bias the whole stats.
+def compute_correlation_and_plot_data(feature1: str, feature2: str, data: pd.DataFrame) -> Tuple[float, plt.Figure]:
+	"""_summary_
+
+	:param feature1: _description_
+	:type feature1: str
+	:param feature2: _description_
+	:type feature2: str
+	:param data: _description_
+	:type data: pd.DataFrame
+	:return: _description_
+	:rtype: Tuple[float, plt.Figure]
+	"""
+	sub_df = data[data[[feature1, feature2]].ne("").all(axis=1)][[feature1, feature2]]
+	correlation = sub_df.corr()[feature1].iloc[-1]
+
+	fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+	sns.regplot(x=sub_df[feature1], y=sub_df[feature2])
+	return correlation, fig
