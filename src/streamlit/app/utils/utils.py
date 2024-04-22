@@ -1,6 +1,5 @@
 """Utility functions for streamlit webpage."""
 
-import csv
 import re
 from pathlib import Path
 from typing import Any, Dict, Tuple, Union
@@ -16,8 +15,42 @@ sns.set_theme()
 
 
 @st.cache_data
+def filter_data(dataframe: pd.DataFrame) -> pd.DataFrame:
+	"""_summary_
+
+	:param dataframe: _description_
+	:type dataframe: pd.DataFrame
+	:return: _description_
+	:rtype: pd.DataFrame
+	"""
+
+	df_new = dataframe.copy()
+
+	for _, series in df_new.items():
+		# If more than one datatype
+		unique_types = series.apply(type).unique()
+		# more than 1 data type
+		if len(unique_types) > 1:
+			continue
+
+		# Get all potentially classification features...
+		series_arr = series.copy(deep=True)
+		series_arr.dropna(inplace=True)
+		# if np.array_equal(series_arr, series_arr.astype(int)):
+		# TODO might be the wrong threshold
+		series[series > 5000] = np.nan
+
+		# TODO not only classification data seems to have this mixture
+		# anthro hueftumfang for example also is float but contains 9999 as not known data
+	return df_new
+
+
+@st.cache_data
 def extract_infos_given_datapath(
-	data_path: Union[str, Path], description_file: Union[str, Path], metadata_path: Union[str, Path]
+	original_data: pd.DataFrame,
+	filtered_data: pd.DataFrame,
+	description_file: Union[str, Path],
+	metadata_path: Union[str, Path],
 ) -> Dict[str, Any]:
 	"""This function is used to search for the description of a specific feature given some
 	data.
@@ -37,8 +70,8 @@ def extract_infos_given_datapath(
 
 	feature_description: Dict[str, Any] = {}
 
-	data = pd.read_csv(data_path, sep=";", encoding="latin1", quoting=csv.QUOTE_NONE)
-	features = data.columns[1:]
+	# data = pd.read_csv(data_path, sep=";", encoding="latin1", quoting=csv.QUOTE_NONE)
+	features = filtered_data.columns[1:]
 
 	with open(str(description_file)) as file:
 		html_content = file.read()
@@ -52,7 +85,7 @@ def extract_infos_given_datapath(
 		feature_information_text = get_information_from_html_file(feature=feat, soup=soup)
 		# Get stats
 		feature_mapping = mapping_dict.get(feat, {})
-		feature_stats = get_data_stats(data[feat], feature_mapping=feature_mapping)
+		feature_stats = get_data_stats(original_data[feat], filtered_data[feat], feature_mapping=feature_mapping)
 		# Get plots
 
 		temp_dict = {
@@ -87,7 +120,9 @@ def get_information_from_html_file(feature: str, soup: BeautifulSoup) -> str:
 
 
 # TODO some calculations are still somehow wrong and don't match the HTML file
-def get_data_stats(feature_series: pd.Series, feature_mapping: Dict[int, str]) -> Dict[str, Any]:
+def get_data_stats(
+	feature_series: pd.Series, feature_series_filtered: pd.Series, feature_mapping: Dict[int, str]
+) -> Dict[str, Any]:
 	"""Calculate data stats and store in dict
 
 	:param feature_series: Data for a specific feature
@@ -102,18 +137,12 @@ def get_data_stats(feature_series: pd.Series, feature_mapping: Dict[int, str]) -
 	feature_stats["dtype"] = feature_series.dtype
 
 	# TODO add mapping to be able to also compute stats...
-	if np.issubdtype(feature_series.dtype, str):
+	if str in feature_series.apply(type).unique():
 		feature_stats["values"] = feature_series.unique()
 		return feature_stats
 
-	# Somehow there are string values in some columns...
-	# TODO check this behavior
-	feature_series = feature_series.apply(pd.to_numeric, errors="coerce").dropna()
-
 	# Compute numerical stats
 	series_arr = np.array(feature_series)
-	feature_stats["max"] = feature_series.max()
-	feature_stats["min"] = feature_series.min()
 
 	# Sometimes discrete values are something saved as float (e.g. d_an_msart1b)
 	# check if equally holds if converted to int
@@ -123,11 +152,14 @@ def get_data_stats(feature_series: pd.Series, feature_mapping: Dict[int, str]) -
 			int(k): {"count": int(v), "name": feature_mapping.get(int(k), int(k))} for k, v in zip(values, counts)
 		}
 
-	feature_stats["mean"] = feature_series.mean()
-	feature_stats["std"] = feature_series.std()
-	feature_stats["0.25-quantile"] = feature_series.quantile(0.25)
-	feature_stats["0.75-quantile"] = feature_series.quantile(0.75)
-	feature_stats["median"] = feature_series.median()
+	# Compute stats on filtered data
+	feature_stats["max"] = feature_series_filtered.max()
+	feature_stats["min"] = feature_series_filtered.min()
+	feature_stats["mean"] = feature_series_filtered.mean()
+	feature_stats["std"] = feature_series_filtered.std()
+	feature_stats["0.25-quantile"] = feature_series_filtered.quantile(0.25)
+	feature_stats["0.75-quantile"] = feature_series_filtered.quantile(0.75)
+	feature_stats["median"] = feature_series_filtered.median()
 
 	return feature_stats
 
@@ -208,9 +240,11 @@ def compute_correlation_and_plot_data(
 	# extract feature specific info
 	feature_dict = {}
 	feature_dict["feature1"] = [
-		data_point for data_point in attr_info[feature1]["feature_stats"]["data_distribution"].values()
+		data_point for data_point in attr_info[feature1]["feature_stats"].get("data_distribution", {}).values()
 	]
-	feature_dict["feature2"] = [data_point for data_point in attr_info[feature2]["feature_stats"]["data_distribution"]]
+	feature_dict["feature2"] = [
+		data_point for data_point in attr_info[feature2]["feature_stats"].get("data_distribution", {})
+	]
 
 	fig = create_feature_plot(sub_df[feature1], sub_df[feature2], feature_dict)
 	data_count = len(sub_df)

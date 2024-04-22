@@ -3,7 +3,12 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from utils.utils import compute_correlation_and_plot_data, create_distribution_plot, extract_infos_given_datapath
+from utils.utils import (
+	compute_correlation_and_plot_data,
+	create_distribution_plot,
+	extract_infos_given_datapath,
+	filter_data,
+)
 
 # Hardcoding the data paths for now, might change in future
 # data_path = st.file_uploader("Select folder containing data information")
@@ -26,13 +31,22 @@ if root:
 	data_description_path = root / "NAKO-536 - 2023-12-06 - Beschreibung des Übergabedatensatzes.html"
 
 	data = pd.read_csv(data_path, sep=";", encoding="latin1", quoting=csv.QUOTE_NONE)
+	filtered_data = filter_data(data)
+
+	# ------- Preprocess Data --------- #
+
+	# ------- Select Data for information --------- #
+
 	features = data.columns[1:]
 	col1, col2 = st.columns(2)
 	with col1:
 		option = st.selectbox("Choose the attribute you wish to get more info about.", features)
 
 	attr_info = extract_infos_given_datapath(
-		data_path=data_path, description_file=data_description_path, metadata_path=metadata_path
+		original_data=data,
+		filtered_data=filtered_data,
+		description_file=data_description_path,
+		metadata_path=metadata_path,
 	)
 	with col2:
 		st.markdown("""
@@ -52,18 +66,22 @@ if root:
 			""")
 
 	# --------------------------------
+
+	# ------- Select features to compare and compute correlation --------- #
 	st.header("Correlation", divider=True)
 
 	# Select features to compute correlation, and plot against each other
 	col3, col4 = st.columns(2)
 	with col3:
 		feature1 = st.selectbox("First feature:", features, key="FeatureCorr1")
+		st.markdown(f"{attr_info[feature1].get('feature_information_text')}")
+
 	with col4:
 		feature2 = st.selectbox("Second feature", features, key="FeatureCorr2")
-
+		st.markdown(f"{attr_info[feature2].get('feature_information_text')}")
 	# Maybe additonally calculate the 10 features with the highest correlation.
 	# This might be NOT to computationally problematic since the union of data might be small
-	correlation, fig, data_count = compute_correlation_and_plot_data(feature1, feature2, data)
+	correlation, fig, data_count = compute_correlation_and_plot_data(feature1, feature2, filtered_data, attr_info)
 	st.pyplot(fig)
 	st.write(f"Correlation: {correlation}")
 	st.write(f"Data amount used: {data_count}")
