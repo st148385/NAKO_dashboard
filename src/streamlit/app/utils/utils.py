@@ -246,7 +246,7 @@ def compute_correlation_and_plot_data(
 		data_point for data_point in attr_info[feature2]["feature_stats"].get("data_distribution", {})
 	]
 
-	fig = create_feature_plot(sub_df[feature1], sub_df[feature2], feature_dict)
+	fig = create_feature_plot(data[feature1], data[feature2], feature_dict)
 	data_count = len(sub_df)
 	return correlation, fig, data_count
 
