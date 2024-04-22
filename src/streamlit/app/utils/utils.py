@@ -69,16 +69,13 @@ def extract_infos_given_datapath(
 	"""
 
 	feature_description: Dict[str, Any] = {}
-
-	# data = pd.read_csv(data_path, sep=";", encoding="latin1", quoting=csv.QUOTE_NONE)
 	features = filtered_data.columns[1:]
 
 	with open(str(description_file)) as file:
 		html_content = file.read()
 
 	soup = BeautifulSoup(html_content, "html.parser")
-	metadata = pd.read_csv(metadata_path, sep=";", on_bad_lines="skip")
-	# metadata.dropna(inplace=True)
+	metadata = pd.read_csv(metadata_path, sep=";", on_bad_lines="skip")  # , encoding="latin1")
 	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	for feat in features:
 		# Get info text
@@ -88,8 +85,8 @@ def extract_infos_given_datapath(
 		# Get stats
 		feature_mapping = mapping_dict.get(feat, {})
 		feature_stats = get_data_stats(original_data[feat], filtered_data[feat], feature_mapping=feature_mapping)
-		# Get plots
 
+		# Merge info and stats
 		temp_dict = {
 			"feature_information_text": feature_information_text,
 			"feature_stats": feature_stats,
@@ -218,7 +215,7 @@ def create_distribution_plot(
 	ax.set_ylabel("Data count")
 	ax.set_title(title)
 
-	tick_control_parameter = 1 if len(counts) <= 10 else 10
+	tick_control_parameter = 1 if len(counts) <= 15 else 10
 	label_names = [data_point["name"] for data_point in data_distribution.values()]
 	label_values = [label for label in data_distribution]
 	ax.set_xticks(x_ticks[::tick_control_parameter])
