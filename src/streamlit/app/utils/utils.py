@@ -78,11 +78,13 @@ def extract_infos_given_datapath(
 
 	soup = BeautifulSoup(html_content, "html.parser")
 	metadata = pd.read_csv(metadata_path, sep=";", on_bad_lines="skip")
-	metadata.dropna(inplace=True)
+	# metadata.dropna(inplace=True)
 	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	for feat in features:
 		# Get info text
-		feature_information_text = get_information_from_html_file(feature=feat, soup=soup)
+		feature_information_text = get_information_from_metadata_or_html_file(
+			feature=feat, soup=soup, metadata=metadata
+		)
 		# Get stats
 		feature_mapping = mapping_dict.get(feat, {})
 		feature_stats = get_data_stats(original_data[feat], filtered_data[feat], feature_mapping=feature_mapping)
@@ -97,7 +99,7 @@ def extract_infos_given_datapath(
 	return feature_description
 
 
-def get_information_from_html_file(feature: str, soup: BeautifulSoup) -> str:
+def get_information_from_metadata_or_html_file(feature: str, soup: BeautifulSoup, metadata: pd.DataFrame) -> str:
 	"""Extract feature description text from HTML file
 
 	:param feature: Feature you want the information for
@@ -107,16 +109,26 @@ def get_information_from_html_file(feature: str, soup: BeautifulSoup) -> str:
 	:return: description of the corresponding feature
 	:rtype: str
 	"""
-	feature_html_content = soup.find("tr", id=feature)
-	if feature_html_content is None:
-		return "No description found..."
-	feature_text = feature_html_content.find_all(string=True, limit=10)[0:]
 
-	# Use regex to filter unwanted characters (non numerical or alphabetical)
-	pattern = re.compile(r"[^\w\s\xa0:°]+")
-	merged_data = ["".join(filter(lambda x: not pattern.search(x), sublist)) for sublist in feature_text[2:]]
-	feature_text = "".join(merged_data).strip()
-	return feature_text
+	# First check if the metadata got the description
+	feature_text = ""
+	if feature in metadata["Variablenname"].unique():
+		feature_metadata = metadata[metadata["Variablenname"] == feature]
+		feature_text = feature_metadata["Label"].iloc[0]
+		return feature_text
+
+	# IF not scrap the html file...
+	if feature_text in [None, ""]:
+		feature_html_content = soup.find("tr", id=feature)
+		if feature_html_content is None:
+			return "No description found..."
+		feature_text = feature_html_content.find_all(string=True, limit=10)[0:]
+
+		# Use regex to filter unwanted characters (non numerical or alphabetical)
+		pattern = re.compile(r"[^\w\s\xa0:°]+")
+		merged_data = ["".join(filter(lambda x: not pattern.search(x), sublist)) for sublist in feature_text[2:]]
+		feature_text = "".join(merged_data).strip()
+		return feature_text
 
 
 # TODO some calculations are still somehow wrong and don't match the HTML file
@@ -153,13 +165,13 @@ def get_data_stats(
 		}
 
 	# Compute stats on filtered data
-	feature_stats["max"] = feature_series_filtered.max()
-	feature_stats["min"] = feature_series_filtered.min()
-	feature_stats["mean"] = feature_series_filtered.mean()
-	feature_stats["std"] = feature_series_filtered.std()
-	feature_stats["0.25-quantile"] = feature_series_filtered.quantile(0.25)
-	feature_stats["0.75-quantile"] = feature_series_filtered.quantile(0.75)
-	feature_stats["median"] = feature_series_filtered.median()
+	feature_stats["max"] = feature_series_filtered[feature_series_filtered.notnull()].max()
+	feature_stats["min"] = feature_series_filtered[feature_series_filtered.notnull()].min()
+	feature_stats["mean"] = feature_series_filtered[feature_series_filtered.notnull()].mean()
+	feature_stats["std"] = feature_series_filtered[feature_series_filtered.notnull()].std()
+	feature_stats["0.25-quantile"] = feature_series_filtered[feature_series_filtered.notnull()].quantile(0.25)
+	feature_stats["0.75-quantile"] = feature_series_filtered[feature_series_filtered.notnull()].quantile(0.75)
+	feature_stats["median"] = feature_series_filtered[feature_series_filtered.notnull()].median()
 
 	return feature_stats
 
@@ -173,10 +185,12 @@ def get_mapping_from_metadata(metadata: pd.DataFrame) -> Dict[int, Any]:
 	:return: dict holding all the mappings label_value <--> label_name
 	:rtype: Dict[int, Any]
 	"""
+	metadata_for_mapping = metadata.copy()
+	metadata_for_mapping.dropna(inplace=True)
 	mapping_dict = {}
-	feature_names = metadata.iloc[:, 0].unique()
+	feature_names = metadata_for_mapping.iloc[:, 0].unique()
 	for feature in feature_names:
-		temp_df = metadata[metadata.iloc[:, 0] == feature]
+		temp_df = metadata_for_mapping[metadata_for_mapping.iloc[:, 0] == feature]
 		mapping_dict[feature] = {
 			int(label_value): label_name for (label_value, label_name) in zip(temp_df.iloc[:, -2], temp_df.iloc[:, -1])
 		}
@@ -235,6 +249,7 @@ def compute_correlation_and_plot_data(
 	:rtype: Tuple[float, plt.Figure]
 	"""
 	sub_df = data[data[[feature1, feature2]].ne("").all(axis=1)][[feature1, feature2]]
+	sub_df.dropna(inplace=True)
 	correlation = sub_df.corr()[feature1].iloc[-1]
 
 	# extract feature specific info
