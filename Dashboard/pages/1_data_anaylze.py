@@ -3,12 +3,6 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from utils.utils import (
-	compute_correlation_and_plot_data,
-	create_distribution_plot,
-	extract_infos_given_datapath,
-	filter_data,
-)
 
 # Hardcoding the data paths for now, might change in future
 # data_path = st.file_uploader("Select folder containing data information")
