@@ -121,6 +121,40 @@ def get_mapping_and_datatype(metadata: pd.DataFrame, html_soup: BeautifulSoup) -
 	return final_mapping_dict
 
 
+def filter_data_by_mapping_dict(data: pd.DataFrame, mapping_dict: Dict[int, Any]):
+	"""Filter the original data by using the mapping dict.
+
+	The mapping dict contains information about which data is "missing"
+	an can therefore be used to filter out the this data.
+
+	:param data: original dataframe
+	:type data: pd.DataFrame
+	:param mapping_dict: mapping dict with label value <-> label name mapping
+	:type mapping_dict: Dict[int, Any]
+	"""
+
+	filtered_data = data.copy(deep=True)
+
+	# Create a mapping dict which holds the values which can be mapped to NaN or -20 or something
+	# TODO Remapping somehow does not work as wished...
+	mapping_to_ignore: Dict[int, float] = {}
+	for feat in data:
+		feature_mapping = mapping_dict.get(feat, False)
+		# empty mapping or feature not in mapping_dict
+		if not feature_mapping:
+			continue
+		temp_dict = {
+			key: np.nan
+			for key, value in feature_mapping.items()
+			if "weiß nicht" in value.lower() or "(Missing)" in value.lower() or "keine angabe" in value.lower()
+		}
+		mapping_to_ignore[feat] = temp_dict
+		filtered_data[feat].map(mapping_to_ignore)
+
+	st.write(data[data["hgr_lh1_kraft"] == 888])
+	st.write(filtered_data)
+
+
 def extract_dataset_information(data: pd.DataFrame, metadata: pd.DataFrame, html_soup: BeautifulSoup) -> Dict[str, Any]:
 	"""Extract feature specific information and store them in some dictionary
 
@@ -137,8 +171,9 @@ def extract_dataset_information(data: pd.DataFrame, metadata: pd.DataFrame, html
 	feature_dict: Dict[str, Any] = {}
 
 	# Get the mapping of values to labels from metadata
-	mapping_dict = get_mapping_and_datatype(metadata=metadata, html_soup=html_soup)
-	st.write(mapping_dict)
+	# 	mapping_dict = get_mapping_and_datatype(metadata=metadata, html_soup=html_soup)
+	mapping_dict = get_mapping_from_metadata(metadata=metadata)
+	filtered_data = filter_data_by_mapping_dict(data, mapping_dict)
 
 	# Filter the data.
 	# FLOAT DATA
@@ -155,6 +190,13 @@ def extract_dataset_information(data: pd.DataFrame, metadata: pd.DataFrame, html
 	"""It seems that
 	SMALLIMT(4) always includes 8888, 9999 as missing/unknown,
 	TINYINT(2) can be 8/9 or 88/99
+
+
+	It seems that ALL missing value contain '(Missing)' in the value the label text.
+	--> Get the feature, collect the mapping and identify the corresponding "MISSING" labels
+	Those can than be replaced by NaN. Also collect the amount of missing data.
+
+	Therefore the datatype scraping is probably not even needed...
 	"""
 
 	# STRING
