@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import plotly.express as px
 import streamlit as st
 from utils.constants import DATASETS_CSV
 from utils.preprocessing_utils import extract_dataset_information
@@ -64,6 +65,23 @@ def csv_dataset(root_dir, dataset):
 			if mapping_dict.get(option):
 				st.write("Mapping:")
 				st.write(mapping_dict.get(option))
+
+		# Create plotly figure
+		fig = px.histogram(
+			filtered_data,
+			x=option,
+			color="basis_sex",
+			hover_data=filtered_data.columns,
+		)
+		# Rename legend
+		for label, sex in mapping_dict.get("basis_sex").items():
+			print(label, sex)
+			fig.update_traces(
+				{"name": sex.replace("'", "")},
+				selector={"name": str(label)},
+			)
+
+		st.plotly_chart(fig)
 
 		col3, col4 = st.columns(2)
 		with col3:
