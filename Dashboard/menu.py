@@ -73,6 +73,17 @@ def csv_dataset(root_dir, dataset):
 			color="basis_sex",
 			hover_data=filtered_data.columns,
 		)
+
+		fig.update_layout(
+			title={
+				"text": f"{option}-distribution after filtering",
+				"y": 0.9,
+				"x": 0.5,
+				"xanchor": "center",
+				"yanchor": "top",
+			}
+		)
+
 		# Rename legend
 		for label, sex in mapping_dict.get("basis_sex").items():
 			print(label, sex)
@@ -82,7 +93,7 @@ def csv_dataset(root_dir, dataset):
 			)
 
 		st.plotly_chart(fig)
-
+		"""
 		col3, col4 = st.columns(2)
 		with col3:
 			st.markdown("Data Description after filtering")
@@ -91,6 +102,8 @@ def csv_dataset(root_dir, dataset):
 		with col4:
 			st.markdown(f"10 features strongest correlated with '{option}'")
 			st.write(correlation[option].abs().sort_values(ascending=False)[0:11])
+		"""
+		# Visualize Correlation
 
 	return
 

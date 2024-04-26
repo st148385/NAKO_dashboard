@@ -187,10 +187,20 @@ def extract_dataset_information(
 	# TODO STRING data is not properly handled atm.
 
 	# Access features in data
-	features = data.columns
+	features = data.columns[1:]
 
 	for feat in features:
 		feature_information_text = get_information_text_from_metadata_or_html_soup(feat, metadata, html_soup)
 		feature_dict[feat] = feature_information_text
+
+		# Check if string datatype
+		if str in filtered_data[feat].apply(type).unique():
+			continue
+		# Mapping dict shall also hold identity mappings which are not mentioned in metadata
+		if np.array_equal(filtered_data[feat].dropna(), filtered_data[feat].dropna().astype(int)):
+			temp_mapping_dict = {identity: identity for identity in filtered_data[feat].dropna()}
+			mapping_dict[feat] = temp_mapping_dict | mapping_dict.get(feat, {})
+			# Sort mapping by keys
+			mapping_dict[feat] = {key: mapping_dict.get(feat)[key] for key in sorted(mapping_dict.get(feat, {}))}
 
 	return feature_dict, filtered_data, mapping_dict, correlation
