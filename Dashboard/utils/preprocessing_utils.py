@@ -214,4 +214,7 @@ def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str]
 	:param groupby: List containing the features to filter after
 	:type groupby: List[str]
 	"""
-	return data[1:].groupby(groupby_options).corr(numeric_only=True)
+	if groupby_options:
+		return data.drop(["ID"], axis=1).groupby(groupby_options).corr(numeric_only=True)
+
+	return data.drop(["ID"], axis=1).corr(numeric_only=True)
