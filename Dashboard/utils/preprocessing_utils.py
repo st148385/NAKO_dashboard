@@ -6,6 +6,8 @@ import pandas as pd
 import streamlit as st
 from bs4 import BeautifulSoup
 
+from utils.constants import IGNORE_VALUE
+
 
 def extract_data_type_from_html_soup(
 	feature_list: List[str],
@@ -135,24 +137,21 @@ def filter_data_by_mapping_dict(data: pd.DataFrame, mapping_dict: Dict[int, Any]
 
 	filtered_data = data.copy(deep=True)
 
-	# Create a mapping dict which holds the values which can be mapped to NaN or -20 or something
-	# TODO Remapping somehow does not work as wished...
+	# Remap all values which are decalred as "missing" or something similar to IGNORE_VALUE (e.g. NaN)
 	mapping_to_ignore: Dict[int, float] = {}
 	for feat in data:
 		feature_mapping = mapping_dict.get(feat, False)
 		# empty mapping or feature not in mapping_dict
 		if not feature_mapping:
 			continue
-		temp_dict = {
-			key: np.nan
+		mapping_to_ignore = {
+			int(key): IGNORE_VALUE
 			for key, value in feature_mapping.items()
-			if "weiß nicht" in value.lower() or "(Missing)" in value.lower() or "keine angabe" in value.lower()
+			if "weiß nicht" in value.lower() or "(missing)" in value.lower() or "keine angabe" in value.lower()
 		}
-		mapping_to_ignore[feat] = temp_dict
-		filtered_data[feat].map(mapping_to_ignore)
 
-	st.write(data[data["hgr_lh1_kraft"] == 888])
-	st.write(filtered_data)
+		if mapping_to_ignore:
+			filtered_data[feat] = filtered_data[feat].map(lambda x: mapping_to_ignore.get(x, x))
 
 
 def extract_dataset_information(data: pd.DataFrame, metadata: pd.DataFrame, html_soup: BeautifulSoup) -> Dict[str, Any]:
