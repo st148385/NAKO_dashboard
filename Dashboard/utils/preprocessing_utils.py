@@ -209,9 +209,9 @@ def extract_dataset_information(
 def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str]):
 	"""Calculate the correlation based on the grouped dataFrame.
 
-	:param data: _description_
+	:param data: Dataframe
 	:type data: pd.DataFrame
-	:param groupby: _description_
+	:param groupby: List containing the features to filter after
 	:type groupby: List[str]
 	"""
 	return data[1:].groupby(groupby_options).corr(numeric_only=True)
