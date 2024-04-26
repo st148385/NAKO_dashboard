@@ -33,11 +33,11 @@ def csv_dataset(root_dir, dataset):
 		# Load the data
 		data = read_csv_file_cached(data_path, sep=seperator, encoding=encoding)
 		metadata = read_csv_file_cached(metadata_path, sep=metadata_seperator)
-		html_soup = read_html_from_path(html_path)
+		# html_soup = read_html_from_path(html_path)
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
-		feature_information = extract_dataset_information(data, metadata, html_soup)
+		feature_information = extract_dataset_information(data, metadata, html_path)
 		# 2.
 	return
 

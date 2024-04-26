@@ -1,5 +1,6 @@
 import re
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -7,6 +8,7 @@ import streamlit as st
 from bs4 import BeautifulSoup
 
 from utils.constants import IGNORE_VALUE
+from utils.reading_utils import read_html_from_path
 
 
 def extract_data_type_from_html_soup(
@@ -135,9 +137,11 @@ def filter_data_by_mapping_dict(data: pd.DataFrame, mapping_dict: Dict[int, Any]
 	:type mapping_dict: Dict[int, Any]
 	"""
 
-	filtered_data = data.copy(deep=True)
+	filtered_data = data.copy()
 
 	# Remap all values which are decalred as "missing" or something similar to IGNORE_VALUE (e.g. NaN)
+	# TODO IF there are no mapping dict given by the metadata, there still sometimes appear high values
+	# which with high certainty correspond to MISSING data
 	mapping_to_ignore: Dict[int, float] = {}
 	for feat in data:
 		feature_mapping = mapping_dict.get(feat, False)
@@ -153,8 +157,13 @@ def filter_data_by_mapping_dict(data: pd.DataFrame, mapping_dict: Dict[int, Any]
 		if mapping_to_ignore:
 			filtered_data[feat] = filtered_data[feat].map(lambda x: mapping_to_ignore.get(x, x))
 
+	return filtered_data
 
-def extract_dataset_information(data: pd.DataFrame, metadata: pd.DataFrame, html_soup: BeautifulSoup) -> Dict[str, Any]:
+
+@st.cache_data
+def extract_dataset_information(
+	data: pd.DataFrame, metadata: pd.DataFrame, html_path: Union[str, Path]
+) -> Dict[str, Any]:
 	"""Extract feature specific information and store them in some dictionary
 
 	:param data: original dataframe
@@ -169,37 +178,14 @@ def extract_dataset_information(data: pd.DataFrame, metadata: pd.DataFrame, html
 	# Init feature dict
 	feature_dict: Dict[str, Any] = {}
 
+	html_soup = read_html_from_path(html_path)
+
 	# Get the mapping of values to labels from metadata
-	# 	mapping_dict = get_mapping_and_datatype(metadata=metadata, html_soup=html_soup)
 	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	filtered_data = filter_data_by_mapping_dict(data, mapping_dict)
+	correlation = filtered_data.corr(numeric_only=True)
 
-	# Filter the data.
-	# FLOAT DATA
-	# 1. check if float data.
-	# 2. check if there is a value in the mapping_dict
-	# 3. If there is a value, this probably means something like "missing data"
-
-	# INT DATA
-	# 1. Probably i need to scrap the DATATYPE from the HTML file.
-	# Usually it seems that the interesting classes are in the lower range
-	# And the "unknown" classes are in the end of the speicifc DATATYPE
-	# e.g. TINYINT got plausible values 1, 2 but unknown/missing is 8/9
-
-	"""It seems that
-	SMALLIMT(4) always includes 8888, 9999 as missing/unknown,
-	TINYINT(2) can be 8/9 or 88/99
-
-
-	It seems that ALL missing value contain '(Missing)' in the value the label text.
-	--> Get the feature, collect the mapping and identify the corresponding "MISSING" labels
-	Those can than be replaced by NaN. Also collect the amount of missing data.
-
-	Therefore the datatype scraping is probably not even needed...
-	"""
-
-	# STRING
-	# Dont know yet...
+	# TODO STRING data is not properly handled atm.
 
 	# Access features in data
 	features = data.columns
