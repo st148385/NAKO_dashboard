@@ -62,7 +62,7 @@ def csv_dataset(root_dir, dataset):
 
 			if mapping_dict.get(option):
 				st.write("Mapping:")
-				st.write(mapping_dict.get(option))
+				st.json(mapping_dict.get(option), expanded=False)
 
 		# Create plotly figure
 		fig = px.histogram(
@@ -84,7 +84,6 @@ def csv_dataset(root_dir, dataset):
 
 		# Rename legend
 		for label, sex in mapping_dict.get("basis_sex").items():
-			print(label, sex)
 			fig.update_traces(
 				{"name": sex.replace("'", "")},
 				selector={"name": str(label)},
@@ -105,9 +104,11 @@ def csv_dataset(root_dir, dataset):
 		# TODO this does not work as wished atm.
 		with col3:
 			feature1_corr = st.selectbox("Choose first attribute", feature_list, key="feature1Corr")
+			st.markdown(f"{feature_information[feature1_corr]}")
 
 		with col4:
 			feature2_corr = st.selectbox("Choose second attribute", feature_list, key="feature2Corr")
+			st.markdown(f"{feature_information[feature2_corr]}")
 
 		fig_corr = px.scatter(
 			filtered_data,
