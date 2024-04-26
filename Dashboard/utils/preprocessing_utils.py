@@ -182,7 +182,6 @@ def extract_dataset_information(
 	# Get the mapping of values to labels from metadata
 	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	filtered_data = filter_data_by_mapping_dict(data, mapping_dict)
-	correlation = filtered_data.corr(numeric_only=True)
 
 	# TODO STRING data is not properly handled atm.
 
@@ -203,4 +202,16 @@ def extract_dataset_information(
 			# Sort mapping by keys
 			mapping_dict[feat] = {key: mapping_dict.get(feat)[key] for key in sorted(mapping_dict.get(feat, {}))}
 
-	return feature_dict, filtered_data, mapping_dict, correlation
+	return feature_dict, filtered_data, mapping_dict
+
+
+@st.cache_data
+def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str]):
+	"""Calculate the correlation based on the grouped dataFrame.
+
+	:param data: _description_
+	:type data: pd.DataFrame
+	:param groupby: _description_
+	:type groupby: List[str]
+	"""
+	return data[1:].groupby(groupby_options).corr(numeric_only=True)

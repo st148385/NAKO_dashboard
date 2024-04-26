@@ -3,7 +3,7 @@ from pathlib import Path
 import plotly.express as px
 import streamlit as st
 from utils.constants import DATASETS_CSV
-from utils.preprocessing_utils import extract_dataset_information
+from utils.preprocessing_utils import calculate_correlation_groupby, extract_dataset_information
 from utils.reading_utils import read_csv_file_cached
 
 if "_dataset_configuration_button" not in st.session_state:
@@ -48,9 +48,7 @@ def csv_dataset(root_dir, dataset):
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
-		feature_information, filtered_data, mapping_dict, correlation = extract_dataset_information(
-			data, metadata, html_path
-		)
+		feature_information, filtered_data, mapping_dict = extract_dataset_information(data, metadata, html_path)
 
 		col1, col2 = st.columns(2)
 		with col1:
@@ -93,6 +91,14 @@ def csv_dataset(root_dir, dataset):
 			)
 
 		st.plotly_chart(fig)
+
+		# Correlation.
+		st.markdown("#### Correlation")
+		groupby_options = st.multiselect("How to you want to group the data", data.columns[1:], ["basis_sex"])
+
+		correlation = calculate_correlation_groupby(filtered_data, groupby_options)
+		st.write(correlation)
+
 		"""
 		col3, col4 = st.columns(2)
 		with col3:
