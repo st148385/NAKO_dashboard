@@ -97,20 +97,60 @@ def csv_dataset(root_dir, dataset):
 		groupby_options = st.multiselect("How to you want to group the data", data.columns[1:], ["basis_sex"])
 
 		correlation = calculate_correlation_groupby(filtered_data, groupby_options)
-		st.write(correlation)
 
-		"""
 		col3, col4 = st.columns(2)
+
+		feature_list = [feat for feat in data.columns[1:] if feat not in groupby_options]
+
+		# TODO this does not work as wished atm.
 		with col3:
-			st.markdown("Data Description after filtering")
-			st.write(filtered_data[option].describe())
+			feature1_corr = st.selectbox("Choose first attribute", feature_list, key="feature1Corr")
 
 		with col4:
-			st.markdown(f"10 features strongest correlated with '{option}'")
-			st.write(correlation[option].abs().sort_values(ascending=False)[0:11])
-		"""
-		# Visualize Correlation
+			feature2_corr = st.selectbox("Choose second attribute", feature_list, key="feature2Corr")
 
+		fig_corr = px.scatter(
+			filtered_data,
+			x=feature1_corr,
+			y=feature2_corr,
+			color="basis_sex",
+			opacity=0.4,
+			trendline="ols",
+			color_discrete_map={
+				"1": "red",
+				"2": "green",
+			},
+		)
+
+		# Rename legend
+		for label, sex in mapping_dict.get("basis_sex").items():
+			print(label, sex)
+			fig_corr.update_traces(
+				{"name": sex.replace("'", "")},
+				selector={"name": str(label)},
+			)
+
+		st.plotly_chart(fig_corr)
+		sub_df = filtered_data[filtered_data[[feature1_corr, feature2_corr]].ne("").all(axis=1)][
+			[feature1_corr, feature2_corr]
+		]
+		st.markdown(f"Used samples: {len(sub_df.dropna())}")
+
+		col5, col6 = st.columns(2)
+
+		with col5:
+			for groupby in groupby_options:
+				for label, name in mapping_dict.get(groupby, {}).items():
+					st.markdown(name)
+					top_k_corr = correlation[feature1_corr][label].sort_values(ascending=False)[:10]
+					st.write(top_k_corr)
+
+		with col6:
+			for groupby in groupby_options:
+				for label, name in mapping_dict.get(groupby, {}).items():
+					st.markdown(name)
+					top_k_corr = correlation[feature2_corr][label].sort_values(ascending=False)[:10]
+					st.write(top_k_corr)
 	return
 
 
