@@ -142,7 +142,6 @@ def filter_data_by_mapping_dict(data: pd.DataFrame, mapping_dict: Dict[int, Any]
 	# Remap all values which are decalred as "missing" or something similar to IGNORE_VALUE (e.g. NaN)
 	# TODO IF there are no mapping dict given by the metadata, there still sometimes appear high values
 	# which with high certainty correspond to MISSING data
-	mapping_to_ignore: Dict[int, float] = {}
 	for feat in data:
 		feature_mapping = mapping_dict.get(feat, False)
 		# empty mapping or feature not in mapping_dict
@@ -192,4 +191,6 @@ def extract_dataset_information(
 
 	for feat in features:
 		feature_information_text = get_information_text_from_metadata_or_html_soup(feat, metadata, html_soup)
-		break
+		feature_dict[feat] = feature_information_text
+
+	return feature_dict, filtered_data, mapping_dict, correlation

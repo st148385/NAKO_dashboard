@@ -3,7 +3,17 @@ from pathlib import Path
 import streamlit as st
 from utils.constants import DATASETS_CSV
 from utils.preprocessing_utils import extract_dataset_information
-from utils.reading_utils import read_csv_file_cached, read_html_from_path
+from utils.reading_utils import read_csv_file_cached
+
+if "_dataset_configuration_button" not in st.session_state:
+	st.session_state.dataset_configuration_button = False
+
+if "dataset_configuration_button" not in st.session_state:
+	st.session_state.dataset_configuration_button = False
+
+
+def set_dataset_configuration():
+	st.session_state.dataset_configuration_button = st.session_state._dataset_configuration_button
 
 
 def no_dataset():
@@ -26,10 +36,10 @@ def csv_dataset(root_dir, dataset):
 	metadata_seperator = DATASET_INFO["metadata_seperator"]
 	encoding = DATASET_INFO["encoding"]
 
-	st.button("Configuration is correct", key="dataset_configuration")
+	st.button("Configuration is correct", key="_dataset_configuration_button", on_click=set_dataset_configuration)
 
 	# If configuration is confirmed we start to get specific for the dataset
-	if st.session_state.dataset_configuration:
+	if st.session_state.dataset_configuration_button:
 		# Load the data
 		data = read_csv_file_cached(data_path, sep=seperator, encoding=encoding)
 		metadata = read_csv_file_cached(metadata_path, sep=metadata_seperator)
@@ -37,8 +47,33 @@ def csv_dataset(root_dir, dataset):
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
-		feature_information = extract_dataset_information(data, metadata, html_path)
-		# 2.
+		feature_information, filtered_data, mapping_dict, correlation = extract_dataset_information(
+			data, metadata, html_path
+		)
+
+		col1, col2 = st.columns(2)
+		with col1:
+			option = st.selectbox("Choose the attribute you wish to get more info about.", data.columns[1:])
+
+		with col2:
+			st.markdown("""
+				**Data Description:**
+						""")
+			st.markdown(f"{feature_information[option]}")
+
+			if mapping_dict.get(option):
+				st.write("Mapping:")
+				st.write(mapping_dict.get(option))
+
+		col3, col4 = st.columns(2)
+		with col3:
+			st.markdown("Data Description after filtering")
+			st.write(filtered_data[option].describe())
+
+		with col4:
+			st.markdown(f"10 features strongest correlated with '{option}'")
+			st.write(correlation[option].abs().sort_values(ascending=False)[0:11])
+
 	return
 
 
