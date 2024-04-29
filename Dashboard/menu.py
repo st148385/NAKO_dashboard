@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 import plotly.express as px
 import streamlit as st
 from utils.constants import DATASETS_CSV
@@ -117,15 +118,10 @@ def csv_dataset(root_dir, dataset):
 			color="basis_sex",
 			opacity=0.4,
 			trendline="ols",
-			color_discrete_map={
-				"1": "red",
-				"2": "green",
-			},
 		)
 
 		# Rename legend
 		for label, sex in mapping_dict.get("basis_sex").items():
-			print(label, sex)
 			fig_corr.update_traces(
 				{"name": sex.replace("'", "")},
 				selector={"name": str(label)},
@@ -143,14 +139,52 @@ def csv_dataset(root_dir, dataset):
 			for groupby in groupby_options:
 				for label, name in mapping_dict.get(groupby, {}).items():
 					st.markdown(name)
-					top_k_corr = correlation[feature1_corr][label].sort_values(ascending=False)[:10]
+
+					# Get the top 10 correlations and drop the feature itself
+					top_k_corr = pd.DataFrame(
+						correlation.unstack()[feature1_corr]
+						.sort_values(by=label, ascending=False, axis=1, key=abs)
+						.loc[label]
+					).drop(feature2_corr)[:10]
+					top_k_corr.insert(
+						1,
+						"Samples used",
+						[
+							len(
+								filtered_data[filtered_data[[feature1_corr, label]].ne("").all(axis=1)][
+									[feature1_corr, label]
+								].dropna()
+							)
+							for label in top_k_corr.index
+						],
+					)
 					st.write(top_k_corr)
 
 		with col6:
 			for groupby in groupby_options:
 				for label, name in mapping_dict.get(groupby, {}).items():
 					st.markdown(name)
-					top_k_corr = correlation[feature2_corr][label].sort_values(ascending=False)[:10]
+
+					# Get the top 10 correlations and drop the feature itself
+					top_k_corr = pd.DataFrame(
+						correlation.unstack()[feature2_corr]
+						.sort_values(by=label, ascending=False, axis=1, key=abs)
+						.loc[label]
+					).drop(feature2_corr)[:10]
+
+					top_k_corr.insert(
+						1,
+						"Samples used",
+						[
+							len(
+								filtered_data[filtered_data[[feature2_corr, label]].ne("").all(axis=1)][
+									[feature2_corr, label]
+								].dropna()
+							)
+							for label in top_k_corr.index
+						],
+					)
+
 					st.write(top_k_corr)
 	return
 
