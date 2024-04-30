@@ -170,7 +170,7 @@ def csv_dataset(root_dir, dataset):
 						correlation.unstack()[feature1_corr]
 						.sort_values(by=label, ascending=False, axis=1, key=abs)
 						.loc[label]
-					).drop(feature2_corr)[:10]
+					).drop(feature1_corr)[:10]
 					top_k_corr.insert(
 						1,
 						"Samples used",
