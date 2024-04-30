@@ -8,7 +8,27 @@ import streamlit as st
 from bs4 import BeautifulSoup
 
 from utils.constants import IGNORE_VALUE
-from utils.reading_utils import read_html_from_path
+from utils.reading_utils import read_csv_file_cached, read_html_from_path
+
+
+def read_mri_data_from_folder(path: Union[str, Path]) -> pd.DataFrame:
+	"""Read the mri data and directly merge the features.
+
+	:param path: _description_
+	:type path: Union[str, Path]
+	:return: _description_
+	:rtype: pd.DataFrame
+	"""
+	path = Path(path)
+	csv_files = path.glob("*.csv")
+	for i, file_path in enumerate(csv_files):
+		# TODO add filtering dependent on the CSV file
+		if i == 0:
+			dataframe = read_csv_file_cached(file_path, sep=";")
+			continue
+		data = read_csv_file_cached(file_path, sep=";")
+		dataframe = pd.merge(data, dataframe, on="ID")
+	return dataframe
 
 
 def extract_data_type_from_html_soup(

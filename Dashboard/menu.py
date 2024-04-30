@@ -5,7 +5,11 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from utils.constants import DATASETS_CSV, MAX_GROUPBY_NUMBER
-from utils.preprocessing_utils import calculate_correlation_groupby, extract_dataset_information
+from utils.preprocessing_utils import (
+	calculate_correlation_groupby,
+	extract_dataset_information,
+	read_mri_data_from_folder,
+)
 from utils.reading_utils import read_csv_file_cached
 
 if "_dataset_configuration_button" not in st.session_state:
@@ -45,6 +49,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 	seperator = DATASET_INFO["data_seperator"]
 	metadata_seperator = DATASET_INFO["metadata_seperator"]
 	encoding = DATASET_INFO["encoding"]
+	# MRI DATA
+	mri_folder = DATASET_INFO.get("mri_folder", False)
 
 	st.button("Configuration is correct", key="_dataset_configuration_button", on_click=set_dataset_configuration)
 
@@ -54,6 +60,11 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 		data = read_csv_file_cached(data_path, sep=seperator, encoding=encoding)
 		metadata = read_csv_file_cached(metadata_path, sep=metadata_seperator)
 		# html_soup = read_html_from_path(html_path)
+		if mri_folder:
+			mri_folder = Path(root_dir) / mri_folder
+			mri_data = read_mri_data_from_folder(mri_folder)
+			# TODO add feature description
+			data = pd.merge(data, mri_data)
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
