@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from utils.constants import DATASETS_CSV
+from utils.constants import DATASETS_CSV, MAX_GROUPBY_NUMBER
 from utils.preprocessing_utils import calculate_correlation_groupby, extract_dataset_information
 from utils.reading_utils import read_csv_file_cached
 
@@ -49,7 +49,13 @@ def csv_dataset(root_dir, dataset):
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
-		feature_information, filtered_data, mapping_dict = extract_dataset_information(data, metadata, html_path)
+		feature_information, filtered_data, mapping_dict, dtype_mapping = extract_dataset_information(
+			data, metadata, html_path
+		)
+
+		integer_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "integer"]
+		# float_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "float"]
+		# string_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "string"]
 
 		col1, col2 = st.columns(2)
 		with col1:
@@ -60,6 +66,7 @@ def csv_dataset(root_dir, dataset):
 				**Data Description:**
 						""")
 			st.markdown(f"{feature_information[option]}")
+			st.markdown(f"Data type: {dtype_mapping[option]}")
 
 			if mapping_dict.get(option):
 				st.write("Mapping:")
@@ -94,9 +101,28 @@ def csv_dataset(root_dir, dataset):
 
 		# Correlation.
 		st.markdown("#### Correlation")
-		groupby_options = st.multiselect("How to you want to group the data", data.columns[1:], ["basis_sex"])
+		st.warning(
+			f"""Currently only integer features are supported. There is currently no binning added for continous data. 
+			Also the amount of groups are restricted to {MAX_GROUPBY_NUMBER}"""
+		)
+		groupby_options = st.multiselect(
+			"How do you want to group the data", integer_features, ["basis_sex"], max_selections=MAX_GROUPBY_NUMBER
+		)
+		correlation_method = st.selectbox(
+			"Choose correlation method",
+			["pearson", "spearman", "kendall"],
+			help="""
+			Different correlation methods. \n
+			Pearson: is the most used one. The computation is quick but 
+			the correlation describes the linear behaviour.\n
+			Spearman: Calculation takes longer due to rank statstics. The correlation describes the monotonicity. \n
+			Kendall: Also rank based correlation. Describes monotocity. \n
+			TODO: Add Xicorr. The calculation takes longer but it describes the if Y is dependent on X.
+			This correlation might be the most useful one, if the features are non-linearly dependent.
+			""",
+		)
 
-		correlation = calculate_correlation_groupby(filtered_data, groupby_options)
+		correlation, grouped_data = calculate_correlation_groupby(filtered_data, groupby_options, correlation_method)
 
 		col3, col4 = st.columns(2)
 
@@ -132,7 +158,6 @@ def csv_dataset(root_dir, dataset):
 			[feature1_corr, feature2_corr]
 		]
 		st.markdown(f"Used samples: {len(sub_df.dropna())}")
-
 		col5, col6 = st.columns(2)
 
 		with col5:
@@ -186,6 +211,7 @@ def csv_dataset(root_dir, dataset):
 					)
 
 					st.write(top_k_corr)
+
 	return
 
 

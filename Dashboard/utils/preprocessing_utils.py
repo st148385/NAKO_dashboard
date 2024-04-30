@@ -182,6 +182,7 @@ def extract_dataset_information(
 	# Get the mapping of values to labels from metadata
 	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	filtered_data = filter_data_by_mapping_dict(data, mapping_dict)
+	dtype_mapping = {}
 
 	# TODO STRING data is not properly handled atm.
 
@@ -192,21 +193,28 @@ def extract_dataset_information(
 		feature_information_text = get_information_text_from_metadata_or_html_soup(feat, metadata, html_soup)
 		feature_dict[feat] = feature_information_text
 
-		# Check if string datatype
+		# Check for the datatype
 		if str in filtered_data[feat].apply(type).unique():
+			dtype_mapping[feat] = "string"
 			continue
+		# The data is sometimes not saved as INT even though it is categorical
+		if np.array_equal(filtered_data[feat].copy().dropna(), filtered_data[feat].copy().dropna().astype(int)):
+			dtype_mapping[feat] = "integer"
+		else:
+			dtype_mapping[feat] = "float"
+
 		# Mapping dict shall also hold identity mappings which are not mentioned in metadata
-		if np.array_equal(filtered_data[feat].dropna(), filtered_data[feat].dropna().astype(int)):
+		if dtype_mapping[feat] == "integer":
 			temp_mapping_dict = {identity: identity for identity in filtered_data[feat].dropna()}
 			mapping_dict[feat] = temp_mapping_dict | mapping_dict.get(feat, {})
 			# Sort mapping by keys
 			mapping_dict[feat] = {key: mapping_dict.get(feat)[key] for key in sorted(mapping_dict.get(feat, {}))}
 
-	return feature_dict, filtered_data, mapping_dict
+	return feature_dict, filtered_data, mapping_dict, dtype_mapping
 
 
 @st.cache_data
-def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str]):
+def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str], correlation_method: str):
 	"""Calculate the correlation based on the grouped dataFrame.
 
 	:param data: Dataframe
@@ -214,7 +222,10 @@ def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str]
 	:param groupby: List containing the features to filter after
 	:type groupby: List[str]
 	"""
-	if groupby_options:
-		return data.drop(["ID"], axis=1).groupby(groupby_options).corr(numeric_only=True)
 
-	return data.drop(["ID"], axis=1).corr(numeric_only=True)
+	# TODO dependent on the data type i want to use different correlation methods...
+	if groupby_options:
+		grouped_data = data.drop(["ID"], axis=1).groupby(groupby_options)
+		return grouped_data.corr(numeric_only=True, method=correlation_method), grouped_data
+
+	return data.drop(["ID"], axis=1).corr(numeric_only=True, method=correlation_method), data
