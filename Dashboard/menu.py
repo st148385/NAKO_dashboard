@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Union
 
 import pandas as pd
 import plotly.express as px
@@ -22,7 +23,14 @@ def no_dataset():
 	return
 
 
-def csv_dataset(root_dir, dataset):
+def csv_dataset(root_dir: Union[str, Path], dataset: str):
+	"""CSV Dateset generation
+
+	:param root_dir: Root directory
+	:type root_dir: Union[str, Path]
+	:param dataset: dataset name
+	:type dataset: str
+	"""
 	# Combine root and dataset name
 	data_root = Path(root_dir, dataset)
 
@@ -53,6 +61,7 @@ def csv_dataset(root_dir, dataset):
 			data, metadata, html_path
 		)
 
+		# TODO add distinction between continuous, ordinal and nominal data
 		integer_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "integer"]
 		# float_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "float"]
 		# string_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "string"]
