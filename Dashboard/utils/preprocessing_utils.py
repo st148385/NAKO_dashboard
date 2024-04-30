@@ -11,23 +11,34 @@ from utils.constants import IGNORE_VALUE
 from utils.reading_utils import read_csv_file_cached, read_html_from_path
 
 
+# THIS IS ALL ASSUMED TO BE STATIC, not really in general form
 def read_mri_data_from_folder(path: Union[str, Path]) -> pd.DataFrame:
 	"""Read the mri data and directly merge the features.
 
-	:param path: _description_
+	:param path: folder path where ff, vol and CSA data is stored.
 	:type path: Union[str, Path]
-	:return: _description_
+	:return: dataframe from ff, vol and CSA files
 	:rtype: pd.DataFrame
 	"""
 	path = Path(path)
-	csv_files = path.glob("*.csv")
+	csv_files = list(path.glob("*.csv"))
+	# Seperate CSV files to have fat fraction seperated.
+	# I want to easily drop all columns without mm2 or mm3 from the other files
+	fat_fraction_csv = [
+		csv_files.pop(i) for i, file_path in enumerate(csv_files) if file_path.stem.lower() == "fat_fractions"
+	][0]
+
 	for i, file_path in enumerate(csv_files):
-		# TODO add filtering dependent on the CSV file
 		if i == 0:
 			dataframe = read_csv_file_cached(file_path, sep=";")
 			continue
 		data = read_csv_file_cached(file_path, sep=";")
+		# Remove replica in form of pixel/voxel
+		columns_to_keep = [col for col in data.columns if "mm^2" in col or "mm^3" in col or "ID" in col]
+		data = data[columns_to_keep]
 		dataframe = pd.merge(data, dataframe, on="ID")
+	# Include Fat fraction file
+	dataframe = pd.merge(dataframe, read_csv_file_cached(fat_fraction_csv, sep=";"))
 	return dataframe
 
 
