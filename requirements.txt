@@ -6,3 +6,4 @@
     sphinx-rtd-theme
     streamlit
     seaborn
+    statsmodels
