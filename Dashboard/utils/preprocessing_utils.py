@@ -38,7 +38,7 @@ def read_mri_data_from_folder(path: Union[str, Path]) -> pd.DataFrame:
 		data = data[columns_to_keep]
 		dataframe = pd.merge(data, dataframe, on="ID")
 	# Include Fat fraction file
-	dataframe = pd.merge(dataframe, read_csv_file_cached(fat_fraction_csv, sep=";"))
+	dataframe = pd.merge(dataframe, read_csv_file_cached(fat_fraction_csv, sep=";"), on="ID")
 	return dataframe
 
 

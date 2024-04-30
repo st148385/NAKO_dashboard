@@ -64,7 +64,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			mri_folder = Path(root_dir) / mri_folder
 			mri_data = read_mri_data_from_folder(mri_folder)
 			# TODO add feature description
-			data = pd.merge(data, mri_data)
+			data = pd.merge(data, mri_data, on="ID")
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
