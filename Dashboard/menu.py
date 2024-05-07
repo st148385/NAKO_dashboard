@@ -103,42 +103,10 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		# ---------------------------------------------------------------------------------------- #
 
-		# Correlation.
+		# Visualize features against each other.
 		st.markdown("#### Correlation")
-		st.warning(
-			f"""Data can only be grouped by NOMINAL/ORDINAL data currently. 
-			Also the amount of groups are restricted to {MAX_GROUPBY_NUMBER}"""
-		)
-		# TODO maybe consider only as set of different features to group by
-		# e.g.
-		# [Sex, Age (needs to be set for ranges), features which are limited by there number of values, binary features]
-		groupby_feature_list = [feat for feat, feat_info in feature_dict.items() if feat_info["nominal/ordinal"]]
-		groupby_options = st.multiselect(
-			"How do you want to group the data",
-			groupby_feature_list,
-			["basis_sex"],
-			format_func=lambda option: f"{feature_dict[option]['info_text']} [{option}]",
-			max_selections=MAX_GROUPBY_NUMBER,
-		)
-		correlation_method = st.selectbox(
-			"Choose correlation method",
-			["pearson", "spearman", "kendall"],
-			help="""
-			Different correlation methods. \n
-			Pearson: is the most used one. The computation is quick but 
-			the correlation describes the linear behaviour.\n
-			Spearman: Calculation takes longer due to rank statstics. The correlation describes the monotonicity. \n
-			Kendall: Also rank based correlation. Describes monotocity. \n
-			TODO: Add Xicorr. The calculation takes longer but it describes the if Y is dependent on X.
-			This correlation might be the most useful one, if the features are non-linearly dependent.
-			""",
-		)
-
-		correlation, grouped_data = calculate_correlation_groupby(filtered_data, groupby_options, correlation_method)
-
+		st.markdown("PLACEHOLDER TEXT")
 		col3, col4 = st.columns(2)
-
-		feature_list = [feat for feat in filtered_data.columns[1:] if feat not in groupby_options]
 
 		# TODO this does not work as wished atm.
 		with col3:
@@ -173,8 +141,69 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			[feature1_corr, feature2_corr]
 		]
 		st.markdown(f"Used samples: {len(sub_df.dropna())}")
-		col5, col6 = st.columns(2)
 
+		# ------------- Correlation calculations -------------------#
+		correlation_method = st.selectbox(
+			"Choose correlation method",
+			["pearson", "spearman", "kendall"],
+			help="""
+			Different correlation methods. \n
+			Pearson: is the most used one. The computation is quick but 
+			the correlation describes the linear behaviour.\n
+			Spearman: Calculation takes longer due to rank statstics. The correlation describes the monotonicity. \n
+			Kendall: Also rank based correlation. Describes monotocity. \n
+			TODO: Add Xicorr. The calculation takes longer but it describes the if Y is dependent on X.
+			This correlation might be the most useful one, if the features are non-linearly dependent.
+			""",
+		)
+
+		groupby_feature_list = [feat for feat, feat_info in feature_dict.items() if feat_info["nominal/ordinal"]]
+		groupby_options = st.multiselect(
+			"How do you want to group the data",
+			groupby_feature_list,
+			["basis_sex"],
+			format_func=lambda option: f"{feature_dict[option]['info_text']} [{option}]",
+			max_selections=MAX_GROUPBY_NUMBER,
+		)
+
+		groupby_columns = st.columns(len(groupby_options))
+		unique_values_per_groupby_option = {feat: filtered_data[feat].unique() for feat in groupby_options}
+
+		for i, (take_col, col_feat) in enumerate(zip(groupby_columns, groupby_options)):
+			with take_col:
+				st.selectbox(
+					f"Choose unique values from: {col_feat} --- {feature_dict[col_feat]['info_text']}",
+					unique_values_per_groupby_option[col_feat],
+					format_func=lambda option: f"[{option}] --- {mapping_dict[col_feat].get(option)}",
+					key=f"groupby_feature_{str(i)}",
+				)
+
+		correlation, grouped_data = calculate_correlation_groupby(filtered_data, groupby_options, correlation_method)
+
+		# Initialize the filter condition
+		filter_condition = None
+
+		# Iterate over the groupby_options
+		for i in range(len(groupby_options)):
+			# Get the feature value from session state
+			feature_value = st.session_state[f"groupby_feature_{i}"]
+			# Add condition for the current feature-value pair
+			if filter_condition is None:
+				filter_condition = correlation[groupby_options[i]] == feature_value
+			else:
+				filter_condition &= correlation[groupby_options[i]] == feature_value
+
+		# Apply the filter condition to get the sub dataframe
+		temp_corr = correlation[filter_condition]
+		import plotly.express as px
+
+		te = px.imshow(temp_corr, color_continuous_scale="RdBu_r", origin="lower")
+		st.plotly_chart(te)
+		st.write(temp_corr)
+		# correlation.query("@groupby_options[0] == @st.session_state['groupby_feature_1']")
+
+		col5, col6 = st.columns(2)
+		"""
 		with col5:
 			for groupby in groupby_options:
 				for label, name in mapping_dict.get(groupby, {}).items():
@@ -226,7 +255,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 					)
 
 					st.write(top_k_corr)
-
+		"""
 	return
 
 

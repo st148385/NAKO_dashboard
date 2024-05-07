@@ -344,6 +344,6 @@ def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str]
 	# TODO dependent on the data type i want to use different correlation methods...
 	if groupby_options:
 		grouped_data = data.drop(["ID"], axis=1).groupby(groupby_options, sort=False)
-		return grouped_data.corr(numeric_only=True, method=correlation_method), grouped_data
+		return grouped_data.corr(numeric_only=True, method=correlation_method).reset_index(), grouped_data
 
 	return data.drop(["ID"], axis=1).corr(numeric_only=True, method=correlation_method), data
