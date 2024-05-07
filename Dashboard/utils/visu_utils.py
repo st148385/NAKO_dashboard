@@ -84,8 +84,6 @@ def create_plotly_scatterplot(
 	for group in groupby:
 		copied_data[group] = copied_data[group].astype(str)
 
-	# filtered_data = copied_data[(np.abs(stats.zscore(copied_data)) < 3).all(axis=1)]
-
 	fig = px.scatter(
 		copied_data,
 		x=feature1,
@@ -98,11 +96,6 @@ def create_plotly_scatterplot(
 		trendline="ols",
 	)
 
-	# result = px.get_trendline_results(fig)
-	# print(result.px_fit_results.iloc[0].summary())
-
-	# fig = px.scatter_matrix(copied_data, dimensions=["basis_age", "basis_uort"], color="basis_sex")
-
 	if mapping_dict.get(groupby[0]):
 		# Rename legend
 		for label, label_name in mapping_dict.get(groupby[0]).items():
@@ -110,12 +103,4 @@ def create_plotly_scatterplot(
 				{"name": label_name.replace("'", "")},
 				selector={"name": str(label)},
 			)
-
-	"""fig.update_layout(
-		xaxis=dict(
-			tickmode="array",
-			tickvals=[feat for feat in copied_data[feature1] if (feat % 5) == 0],
-			ticktext=[mapping_dict[feature1].get(feat) for feat in copied_data[feature1] if (feat % 5) == 0],
-		)
-	)"""
 	return fig
