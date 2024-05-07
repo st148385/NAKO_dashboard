@@ -30,3 +30,4 @@ IGNORE_VALUE = float("nan")
 
 # DATA representation
 MAX_GROUPBY_NUMBER = 3
+TICK_FREQUENCY = 5

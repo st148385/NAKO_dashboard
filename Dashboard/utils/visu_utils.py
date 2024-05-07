@@ -4,6 +4,8 @@ from typing import Dict, List, Union
 import pandas as pd
 import plotly.express as px
 
+from utils.constants import TICK_FREQUENCY
+
 
 def create_plotly_histogram(data: pd.DataFrame, x_axis: str, groupby: str = None, mapping_dict: Dict[int, str] = False):
 	"""Create histogram figure
@@ -39,6 +41,12 @@ def create_plotly_histogram(data: pd.DataFrame, x_axis: str, groupby: str = None
 			"yanchor": "top",
 		}
 	)
+	if mapping_dict.get(x_axis):
+		tick_frequency = TICK_FREQUENCY if len(mapping_dict[x_axis].keys()) > TICK_FREQUENCY else 1
+		fig.update_xaxes(
+			tickvals=[key for i, (key, _) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
+			ticktext=[val for i, (_, val) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
+		)
 
 	# Rename legend
 	if mapping_dict.get(groupby):
@@ -91,11 +99,27 @@ def create_plotly_scatterplot(
 		y=feature2,
 		color=groupby[0],
 		color_discrete_sequence=px.colors.qualitative.Safe,
-		opacity=0.05,
+		opacity=0.1,
 		marginal_x="box",
 		marginal_y="box",
 		trendline="ols",
+		width=1000,
+		height=800,
 	)
+
+	if mapping_dict.get(feature1):
+		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature1].keys()) > TICK_FREQUENCY else 1
+		fig.update_xaxes(
+			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
+			ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
+		)
+
+	if mapping_dict.get(feature2):
+		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature2].keys()) > TICK_FREQUENCY else 1
+		fig.update_yaxes(
+			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
+			ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
+		)
 
 	if mapping_dict.get(groupby[0]):
 		# Rename legend

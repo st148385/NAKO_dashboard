@@ -165,7 +165,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			mapping_dict=mapping_dict,
 		)
 
-		_, mid2, _ = st.columns(3)
+		_, mid2, _ = st.columns((4, 10, 4))
 		with mid2:
 			st.plotly_chart(fig_corr)
 		sub_df = filtered_data[filtered_data[[feature1_corr, feature2_corr]].ne("").all(axis=1)][
