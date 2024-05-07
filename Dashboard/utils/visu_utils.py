@@ -26,7 +26,8 @@ def create_plotly_histogram(data: pd.DataFrame, x_axis: str, groupby: str = None
 		color=groupby,
 		hover_data=data.columns,
 		color_discrete_sequence=px.colors.qualitative.Safe,
-		opacity=0.9,
+		opacity=0.8,
+		barmode="overlay",
 	)
 
 	fig.update_layout(

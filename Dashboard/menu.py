@@ -68,24 +68,27 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
-		feature_information, filtered_data, mapping_dict, dtype_dict = extract_dataset_information(
-			data, metadata, html_path
+		feature_dict, filtered_data, mapping_dict = extract_dataset_information(
+			data, metadata, html_path, dataset_name=dataset
 		)
 
 		col1, col2 = st.columns(2)
-		feature_list = data.columns[1:]
+		feature_list = filtered_data.columns[1:]
 		with col1:
-			option = st.selectbox("Choose the attribute you wish to get more info about.", feature_list)
+			option = st.selectbox(
+				"Choose the attribute you wish to get more info about.",
+				feature_list,
+				format_func=lambda option: f"[{option}] --- {feature_dict[option]['info_text']}",
+			)
 
 		with col2:
 			st.markdown("""
 				**Data Description:**
 						""")
-			st.markdown(f"{feature_information[option]}")
 
-			if dtype_dict.get(option):
-				st.write("Data type:")
-				st.json(dtype_dict.get(option), expanded=False)
+			if feature_dict.get(option):
+				st.write("Feature info:")
+				st.json(feature_dict.get(option), expanded=False)
 
 			if mapping_dict.get(option):
 				st.write("Mapping:")
@@ -103,14 +106,19 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 		# Correlation.
 		st.markdown("#### Correlation")
 		st.warning(
-			f"""Currently only integer features are supported. There is currently no binning added for continous data. 
+			f"""Data can only be grouped by NOMINAL/ORDINAL data currently. 
 			Also the amount of groups are restricted to {MAX_GROUPBY_NUMBER}"""
 		)
 		# TODO maybe consider only as set of different features to group by
 		# e.g.
 		# [Sex, Age (needs to be set for ranges), features which are limited by there number of values, binary features]
+		groupby_feature_list = [feat for feat, feat_info in feature_dict.items() if feat_info["nominal/ordinal"]]
 		groupby_options = st.multiselect(
-			"How do you want to group the data", feature_list, ["basis_sex"], max_selections=MAX_GROUPBY_NUMBER
+			"How do you want to group the data",
+			groupby_feature_list,
+			["basis_sex"],
+			format_func=lambda option: f"{feature_dict[option]['info_text']} [{option}]",
+			max_selections=MAX_GROUPBY_NUMBER,
 		)
 		correlation_method = st.selectbox(
 			"Choose correlation method",
@@ -130,16 +138,24 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		col3, col4 = st.columns(2)
 
-		feature_list = [feat for feat in data.columns[1:] if feat not in groupby_options]
+		feature_list = [feat for feat in filtered_data.columns[1:] if feat not in groupby_options]
 
 		# TODO this does not work as wished atm.
 		with col3:
-			feature1_corr = st.selectbox("Choose first attribute", feature_list, key="feature1Corr")
-			st.markdown(f"{feature_information[feature1_corr]}")
+			feature1_corr = st.selectbox(
+				"Choose first attribute",
+				feature_list,
+				key="feature1Corr",
+				format_func=lambda option: f"[{option}] --- {feature_dict[option]['info_text']}",
+			)
 
 		with col4:
-			feature2_corr = st.selectbox("Choose second attribute", feature_list, key="feature2Corr")
-			st.markdown(f"{feature_information[feature2_corr]}")
+			feature2_corr = st.selectbox(
+				"Choose second attribute",
+				feature_list,
+				key="feature2Corr",
+				format_func=lambda option: f"[{option}] --- {feature_dict[option]['info_text']}",
+			)
 
 		fig_corr = create_plotly_scatterplot(
 			data=filtered_data,
