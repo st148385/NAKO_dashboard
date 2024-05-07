@@ -2,6 +2,8 @@ import streamlit as st
 from menu import menu
 from utils.constants import DATASETS
 
+st.set_page_config(layout="wide")
+
 # Initialize st.session_state.role to None
 if "dataset" not in st.session_state:
 	st.session_state.dataset = None

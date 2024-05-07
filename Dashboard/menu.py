@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Union
 
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 from utils.constants import DATASETS_CSV, MAX_GROUPBY_NUMBER
 from utils.preprocessing_utils import (
@@ -11,6 +10,7 @@ from utils.preprocessing_utils import (
 	read_mri_data_from_folder,
 )
 from utils.reading_utils import read_csv_file_cached
+from utils.visu_utils import create_plotly_histogram, create_plotly_scatterplot
 
 if "_dataset_configuration_button" not in st.session_state:
 	st.session_state.dataset_configuration_button = False
@@ -68,56 +68,37 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
-		feature_information, filtered_data, mapping_dict, dtype_mapping = extract_dataset_information(
+		feature_information, filtered_data, mapping_dict, dtype_dict = extract_dataset_information(
 			data, metadata, html_path
 		)
 
-		# TODO add distinction between continuous, ordinal and nominal data
-		integer_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "integer"]
-		# float_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "float"]
-		# string_features = [feat for feat, dtype in dtype_mapping.items() if dtype == "string"]
-
 		col1, col2 = st.columns(2)
+		feature_list = data.columns[1:]
 		with col1:
-			option = st.selectbox("Choose the attribute you wish to get more info about.", data.columns[1:])
+			option = st.selectbox("Choose the attribute you wish to get more info about.", feature_list)
 
 		with col2:
 			st.markdown("""
 				**Data Description:**
 						""")
 			st.markdown(f"{feature_information[option]}")
-			st.markdown(f"Data type: {dtype_mapping[option]}")
+
+			if dtype_dict.get(option):
+				st.write("Data type:")
+				st.json(dtype_dict.get(option), expanded=False)
 
 			if mapping_dict.get(option):
 				st.write("Mapping:")
 				st.json(mapping_dict.get(option), expanded=False)
 
-		# Create plotly figure
-		fig = px.histogram(
-			filtered_data,
-			x=option,
-			color="basis_sex",
-			hover_data=filtered_data.columns,
+		feature_histogram = create_plotly_histogram(
+			data=filtered_data, x_axis=option, groupby="basis_sex", mapping_dict=mapping_dict
 		)
+		_, mid, _ = st.columns(3)
+		with mid:
+			st.plotly_chart(feature_histogram)
 
-		fig.update_layout(
-			title={
-				"text": f"{option}-distribution after filtering",
-				"y": 0.9,
-				"x": 0.5,
-				"xanchor": "center",
-				"yanchor": "top",
-			}
-		)
-
-		# Rename legend
-		for label, sex in mapping_dict.get("basis_sex").items():
-			fig.update_traces(
-				{"name": sex.replace("'", "")},
-				selector={"name": str(label)},
-			)
-
-		st.plotly_chart(fig)
+		# ---------------------------------------------------------------------------------------- #
 
 		# Correlation.
 		st.markdown("#### Correlation")
@@ -125,8 +106,11 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			f"""Currently only integer features are supported. There is currently no binning added for continous data. 
 			Also the amount of groups are restricted to {MAX_GROUPBY_NUMBER}"""
 		)
+		# TODO maybe consider only as set of different features to group by
+		# e.g.
+		# [Sex, Age (needs to be set for ranges), features which are limited by there number of values, binary features]
 		groupby_options = st.multiselect(
-			"How do you want to group the data", integer_features, ["basis_sex"], max_selections=MAX_GROUPBY_NUMBER
+			"How do you want to group the data", feature_list, ["basis_sex"], max_selections=MAX_GROUPBY_NUMBER
 		)
 		correlation_method = st.selectbox(
 			"Choose correlation method",
@@ -157,23 +141,17 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			feature2_corr = st.selectbox("Choose second attribute", feature_list, key="feature2Corr")
 			st.markdown(f"{feature_information[feature2_corr]}")
 
-		fig_corr = px.scatter(
-			filtered_data,
-			x=feature1_corr,
-			y=feature2_corr,
-			color="basis_sex",
-			opacity=0.4,
-			trendline="ols",
+		fig_corr = create_plotly_scatterplot(
+			data=filtered_data,
+			feature1=feature1_corr,
+			feature2=feature2_corr,
+			groupby="basis_sex",
+			mapping_dict=mapping_dict,
 		)
 
-		# Rename legend
-		for label, sex in mapping_dict.get("basis_sex").items():
-			fig_corr.update_traces(
-				{"name": sex.replace("'", "")},
-				selector={"name": str(label)},
-			)
-
-		st.plotly_chart(fig_corr)
+		_, mid2, _ = st.columns(3)
+		with mid2:
+			st.plotly_chart(fig_corr)
 		sub_df = filtered_data[filtered_data[[feature1_corr, feature2_corr]].ne("").all(axis=1)][
 			[feature1_corr, feature2_corr]
 		]
