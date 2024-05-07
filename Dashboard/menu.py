@@ -95,7 +95,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 				st.json(mapping_dict.get(option), expanded=False)
 
 		feature_histogram = create_plotly_histogram(
-			data=filtered_data, x_axis=option, groupby="basis_sex", mapping_dict=mapping_dict
+			data=filtered_data, x_axis=option, feature_dict=feature_dict, groupby="basis_sex", mapping_dict=mapping_dict
 		)
 		_, mid, _ = st.columns(3)
 		with mid:
@@ -162,6 +162,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			feature1=feature1_corr,
 			feature2=feature2_corr,
 			groupby="basis_sex",
+			feature_dict=feature_dict,
 			mapping_dict=mapping_dict,
 		)
 

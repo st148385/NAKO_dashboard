@@ -1,5 +1,5 @@
 import copy
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 import pandas as pd
 import plotly.express as px
@@ -7,7 +7,13 @@ import plotly.express as px
 from utils.constants import TICK_FREQUENCY
 
 
-def create_plotly_histogram(data: pd.DataFrame, x_axis: str, groupby: str = None, mapping_dict: Dict[int, str] = False):
+def create_plotly_histogram(
+	data: pd.DataFrame,
+	x_axis: str,
+	feature_dict: Dict[str, Any],
+	groupby: str = None,
+	mapping_dict: Dict[int, str] = False,
+):
 	"""Create histogram figure
 
 	:param data: dataframe
@@ -41,7 +47,7 @@ def create_plotly_histogram(data: pd.DataFrame, x_axis: str, groupby: str = None
 			"yanchor": "top",
 		}
 	)
-	if mapping_dict.get(x_axis):
+	if feature_dict.get(x_axis)["nominal/ordinal"]:
 		tick_frequency = TICK_FREQUENCY if len(mapping_dict[x_axis].keys()) > TICK_FREQUENCY else 1
 		fig.update_xaxes(
 			tickvals=[key for i, (key, _) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
@@ -63,6 +69,7 @@ def create_plotly_scatterplot(
 	data: pd.DataFrame,
 	feature1: str,
 	feature2: str,
+	feature_dict: Dict[str, Any],
 	groupby: Union[List[str], str],
 	mapping_dict: Dict[int, str] = False,
 ):
@@ -107,14 +114,14 @@ def create_plotly_scatterplot(
 		height=800,
 	)
 
-	if mapping_dict.get(feature1):
+	if feature_dict.get(feature1)["nominal/ordinal"]:
 		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature1].keys()) > TICK_FREQUENCY else 1
 		fig.update_xaxes(
 			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
 			ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
 		)
 
-	if mapping_dict.get(feature2):
+	if feature_dict.get(feature2)["nominal/ordinal"]:
 		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature2].keys()) > TICK_FREQUENCY else 1
 		fig.update_yaxes(
 			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
