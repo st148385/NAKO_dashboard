@@ -68,12 +68,12 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		# Process data.
 		# 1. Extract general for specific features using metadata and html
-		feature_information, filtered_data, mapping_dict, dtype_dict = extract_dataset_information(
-			data, metadata, html_path
+		feature_dict, filtered_data, mapping_dict = extract_dataset_information(
+			data, metadata, html_path, dataset_name=dataset
 		)
 
 		col1, col2 = st.columns(2)
-		feature_list = data.columns[1:]
+		feature_list = filtered_data.columns[1:]
 		with col1:
 			option = st.selectbox("Choose the attribute you wish to get more info about.", feature_list)
 
@@ -81,11 +81,11 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			st.markdown("""
 				**Data Description:**
 						""")
-			st.markdown(f"{feature_information[option]}")
+			st.markdown(f"{feature_dict[option]['info_text']}")
 
-			if dtype_dict.get(option):
-				st.write("Data type:")
-				st.json(dtype_dict.get(option), expanded=False)
+			if feature_dict.get(option):
+				st.write("Feature info:")
+				st.json(feature_dict.get(option), expanded=False)
 
 			if mapping_dict.get(option):
 				st.write("Mapping:")
@@ -130,16 +130,16 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		col3, col4 = st.columns(2)
 
-		feature_list = [feat for feat in data.columns[1:] if feat not in groupby_options]
+		feature_list = [feat for feat in filtered_data.columns[1:] if feat not in groupby_options]
 
 		# TODO this does not work as wished atm.
 		with col3:
 			feature1_corr = st.selectbox("Choose first attribute", feature_list, key="feature1Corr")
-			st.markdown(f"{feature_information[feature1_corr]}")
+			st.markdown(f"{feature_dict[feature1_corr]['info_text']}")
 
 		with col4:
 			feature2_corr = st.selectbox("Choose second attribute", feature_list, key="feature2Corr")
-			st.markdown(f"{feature_information[feature2_corr]}")
+			st.markdown(f"{feature_dict[feature2_corr]['info_text']}")
 
 		fig_corr = create_plotly_scatterplot(
 			data=filtered_data,

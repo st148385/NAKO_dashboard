@@ -156,7 +156,7 @@ def get_mapping_and_datatype(metadata: pd.DataFrame, html_soup: BeautifulSoup) -
 	return final_mapping_dict
 
 
-def get_iqr_filtered_data(data: pd.DataFrame, dtype_dict: Dict[str, str]) -> pd.DataFrame:
+def get_iqr_filtered_data(data: pd.DataFrame, feature_dict: Dict[str, str]) -> pd.DataFrame:
 	"""Filter the data using IQR method.
 
 	First numerical columns are identified using the dtype dict
@@ -173,7 +173,7 @@ def get_iqr_filtered_data(data: pd.DataFrame, dtype_dict: Dict[str, str]) -> pd.
 	# Filter Data using IQR method. Since i don't know the unterlying distributions i#m not using Zscore
 	# ONLY the data which is not tagged as nominal will be filtered
 	# it does not make sense to filter basis_uort in such a way.
-	selected_features = [feat for feat, feat_info in dtype_dict.items() if not feat_info["nominal/ordinal"]]
+	selected_features = [feat for feat, feat_info in feature_dict.items() if not feat_info["nominal/ordinal"]]
 	sub_df = data[selected_features]
 	Q1 = sub_df.quantile(0.25)
 	Q3 = sub_df.quantile(0.75)
@@ -218,9 +218,57 @@ def filter_data_by_mapping_dict(data: pd.DataFrame, mapping_dict: Dict[int, Any]
 	return filtered_data
 
 
-@st.cache_data
+def manually_filter_and_merge_data(
+	df: pd.DataFrame, mapping_dict: Dict[int, str], feature_dict: Dict[str, Any], dataset_name: str
+) -> pd.DataFrame:
+	"""Filter the data in a manual way.
+
+	E.g. some stuff can be merged and others can be removed.
+	(merge hgl_kraft by getting the mean over all 3 features)
+
+	:param data: dataframe
+	:type data: pd.DataFrame
+	:param dataset_name: dataset name, because some features might do appear only in one dataset
+	:type dataset_name: str
+	:return: cleaned dataframe
+	:rtype: pd.DataFrame
+	"""
+
+	# Handle KRAFT left and right hand
+	# --------------------------------------------------------------------------
+	force_features = df.columns[df.columns.str.contains("lh.*kraft", case=False)]
+	df["hgr_lh_kraft_mean"] = df[force_features].mean(axis=1)
+	# df.drop(force_features, axis="columns", inplace=True)
+	mapping_dict["hgr_lh_kraft_mean"] = mapping_dict[force_features[0]]
+	feature_dict["hgr_lh_kraft_mean"] = feature_dict[force_features[0]]
+	feature_dict["hgr_lh_kraft_mean"].update(
+		{
+			"info_text": "Mittelwert Kraft der linken Hand über lh1 - lh3",
+		}
+	)
+
+	force_features = df.columns[df.columns.str.contains("rh.*kraft", case=False)]
+	df["hgr_rh_kraft_mean"] = df[force_features].mean(axis=1)
+	# df.drop(force_features, axis="columns", inplace=True)
+	mapping_dict["hgr_rh_kraft_mean"] = mapping_dict[force_features[0]]
+	feature_dict["hgr_rh_kraft_mean"] = feature_dict[force_features[0]]
+	feature_dict["hgr_rh_kraft_mean"].update(
+		{
+			"info_text": "Mittelwert Kraft der rechten Hand über rh1 - rh3",
+		}
+	)
+
+	# --------------------------------------------------------------------------
+
+	return df, mapping_dict, feature_dict
+
+
+# @st.cache_data
 def extract_dataset_information(
-	data: pd.DataFrame, metadata: pd.DataFrame, html_path: Union[str, Path]
+	data: pd.DataFrame,
+	metadata: pd.DataFrame,
+	html_path: Union[str, Path],
+	dataset_name: str,
 ) -> Dict[str, Any]:
 	"""Extract feature specific information and store them in some dictionary
 
@@ -241,29 +289,26 @@ def extract_dataset_information(
 	# Get the mapping of values to labels from metadata
 	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	filtered_data = filter_data_by_mapping_dict(data, mapping_dict)
-	dtype_dict = {}
-
-	# TODO STRING data is not properly handled atm.
 
 	# Access features in data
 	features = data.columns[1:]
 
 	for feat in features:
 		feature_information_text = get_information_text_from_metadata_or_html_soup(feat, metadata, html_soup)
-		feature_dict[feat] = feature_information_text
+		feature_dict[feat] = {"info_text": feature_information_text}
 
 		# Check for the datatype
 		if str in filtered_data[feat].apply(type).unique():
-			dtype_dict[feat] = {"dtype": str, "nominal/ordinal": True}
+			feature_dict[feat].update({"dtype": str, "nominal/ordinal": True})
 			continue
 		# The data is sometimes not saved as INT even though it is categorical
 		if np.array_equal(filtered_data[feat].copy().dropna(), filtered_data[feat].copy().dropna().astype(int)):
-			dtype_dict[feat] = {"dtype": int, "nominal/ordinal": False}
+			feature_dict[feat].update({"dtype": int, "nominal/ordinal": False})
 		else:
-			dtype_dict[feat] = {"dtype": float, "nominal/ordinal": False}
+			feature_dict[feat].update({"dtype": float, "nominal/ordinal": False})
 
 		# Mapping dict shall also hold identity mappings which are not mentioned in metadata
-		if dtype_dict[feat]["dtype"] == int:
+		if feature_dict[feat]["dtype"] == int:
 			temp_mapping_dict = {identity: identity for identity in filtered_data[feat].dropna()}
 			mapping_dict[feat] = temp_mapping_dict | mapping_dict.get(feat, {})
 			# Sort mapping by keys
@@ -276,15 +321,18 @@ def extract_dataset_information(
 			mapping_count = len([counter for counter, val in mapping_dict[feat].items() if counter != val])
 
 			if mapping_count >= identity_count:
-				dtype_dict[feat]["nominal/ordinal"] = True
+				feature_dict[feat]["nominal/ordinal"] = True
 
 	# TODO i have to identify nominal data which shall not be filtered this way.
-	filtered_data = get_iqr_filtered_data(filtered_data, dtype_dict)
+	filtered_data = get_iqr_filtered_data(filtered_data, feature_dict)
+	filtered_data, mapping_dict, feature_dict = manually_filter_and_merge_data(
+		filtered_data, mapping_dict, feature_dict, dataset_name
+	)
 
-	return feature_dict, filtered_data, mapping_dict, dtype_dict
+	return feature_dict, filtered_data, mapping_dict
 
 
-@st.cache_data
+# @st.cache_data
 def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str], correlation_method: str):
 	"""Calculate the correlation based on the grouped dataFrame.
 
