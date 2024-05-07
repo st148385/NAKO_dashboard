@@ -6,6 +6,7 @@ METADATA_CONSTANTS = {
 	"metadata_seperator": ";",
 	"data_seperator": ";",
 	"encoding": "latin1",
+	"mri_folder": "MRI_Vol_CSA_FF",
 }
 
 DIABETES_CONSTANTS = {
@@ -15,6 +16,7 @@ DIABETES_CONSTANTS = {
 	"metadata_seperator": ";",
 	"data_seperator": ";",
 	"encoding": "latin1",
+	"mri_folder": "MRI_Vol_CSA_FF",
 }
 
 DATASETS_CSV = {"30k_metadata": METADATA_CONSTANTS, "13k_diabetes": DIABETES_CONSTANTS}

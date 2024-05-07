@@ -8,7 +8,38 @@ import streamlit as st
 from bs4 import BeautifulSoup
 
 from utils.constants import IGNORE_VALUE
-from utils.reading_utils import read_html_from_path
+from utils.reading_utils import read_csv_file_cached, read_html_from_path
+
+
+# THIS IS ALL ASSUMED TO BE STATIC, not really in general form
+def read_mri_data_from_folder(path: Union[str, Path]) -> pd.DataFrame:
+	"""Read the mri data and directly merge the features.
+
+	:param path: folder path where ff, vol and CSA data is stored.
+	:type path: Union[str, Path]
+	:return: dataframe from ff, vol and CSA files
+	:rtype: pd.DataFrame
+	"""
+	path = Path(path)
+	csv_files = list(path.glob("*.csv"))
+	# Seperate CSV files to have fat fraction seperated.
+	# I want to easily drop all columns without mm2 or mm3 from the other files
+	fat_fraction_csv = [
+		csv_files.pop(i) for i, file_path in enumerate(csv_files) if file_path.stem.lower() == "fat_fractions"
+	][0]
+
+	for i, file_path in enumerate(csv_files):
+		if i == 0:
+			dataframe = read_csv_file_cached(file_path, sep=";")
+			continue
+		data = read_csv_file_cached(file_path, sep=";")
+		# Remove replica in form of pixel/voxel
+		columns_to_keep = [col for col in data.columns if "mm^2" in col or "mm^3" in col or "ID" in col]
+		data = data[columns_to_keep]
+		dataframe = pd.merge(data, dataframe, on="ID")
+	# Include Fat fraction file
+	dataframe = pd.merge(dataframe, read_csv_file_cached(fat_fraction_csv, sep=";"), on="ID")
+	return dataframe
 
 
 def extract_data_type_from_html_soup(
@@ -125,6 +156,34 @@ def get_mapping_and_datatype(metadata: pd.DataFrame, html_soup: BeautifulSoup) -
 	return final_mapping_dict
 
 
+def get_iqr_filtered_data(data: pd.DataFrame, dtype_dict: Dict[str, str]) -> pd.DataFrame:
+	"""Filter the data using IQR method.
+
+	First numerical columns are identified using the dtype dict
+	then the IQR filtering takes place to remove outlier.
+
+	:param data: dataframe we want to filter
+	:type data: pd.DataFrame
+	:param dtype_dict: dict to identify the dtype of the corresponding features
+	:type dtype_dict: Dict[str, str]
+	:return: filtered dataframe
+	:rtype: pd.DataFrame
+	"""
+
+	# Filter Data using IQR method. Since i don't know the unterlying distributions i#m not using Zscore
+	# ONLY the data which is not tagged as nominal will be filtered
+	# it does not make sense to filter basis_uort in such a way.
+	selected_features = [feat for feat, feat_info in dtype_dict.items() if not feat_info["nominal/ordinal"]]
+	sub_df = data[selected_features]
+	Q1 = sub_df.quantile(0.25)
+	Q3 = sub_df.quantile(0.75)
+	IQR = Q3 - Q1
+	outliers = (sub_df < (Q1 - 1.5 * IQR)) | (sub_df > (Q3 + 1.5 * IQR))
+	sub_df[outliers] = np.nan
+	data[selected_features] = sub_df
+	return data
+
+
 def filter_data_by_mapping_dict(data: pd.DataFrame, mapping_dict: Dict[int, Any]):
 	"""Filter the original data by using the mapping dict.
 
@@ -182,7 +241,7 @@ def extract_dataset_information(
 	# Get the mapping of values to labels from metadata
 	mapping_dict = get_mapping_from_metadata(metadata=metadata)
 	filtered_data = filter_data_by_mapping_dict(data, mapping_dict)
-	dtype_mapping = {}
+	dtype_dict = {}
 
 	# TODO STRING data is not properly handled atm.
 
@@ -195,22 +254,34 @@ def extract_dataset_information(
 
 		# Check for the datatype
 		if str in filtered_data[feat].apply(type).unique():
-			dtype_mapping[feat] = "string"
+			dtype_dict[feat] = {"dtype": str, "nominal/ordinal": True}
 			continue
 		# The data is sometimes not saved as INT even though it is categorical
 		if np.array_equal(filtered_data[feat].copy().dropna(), filtered_data[feat].copy().dropna().astype(int)):
-			dtype_mapping[feat] = "integer"
+			dtype_dict[feat] = {"dtype": int, "nominal/ordinal": False}
 		else:
-			dtype_mapping[feat] = "float"
+			dtype_dict[feat] = {"dtype": float, "nominal/ordinal": False}
 
 		# Mapping dict shall also hold identity mappings which are not mentioned in metadata
-		if dtype_mapping[feat] == "integer":
+		if dtype_dict[feat]["dtype"] == int:
 			temp_mapping_dict = {identity: identity for identity in filtered_data[feat].dropna()}
 			mapping_dict[feat] = temp_mapping_dict | mapping_dict.get(feat, {})
 			# Sort mapping by keys
 			mapping_dict[feat] = {key: mapping_dict.get(feat)[key] for key in sorted(mapping_dict.get(feat, {}))}
 
-	return feature_dict, filtered_data, mapping_dict, dtype_mapping
+			# IF the majority of the INTEGER VALUES are identity mappings
+			# THEN the data type is really numerical
+			# ELSE the data type is NOMINAL/ORDINAL
+			identity_count = len([counter for counter, val in mapping_dict[feat].items() if counter == val])
+			mapping_count = len([counter for counter, val in mapping_dict[feat].items() if counter != val])
+
+			if mapping_count >= identity_count:
+				dtype_dict[feat]["nominal/ordinal"] = True
+
+	# TODO i have to identify nominal data which shall not be filtered this way.
+	filtered_data = get_iqr_filtered_data(filtered_data, dtype_dict)
+
+	return feature_dict, filtered_data, mapping_dict, dtype_dict
 
 
 @st.cache_data
@@ -225,7 +296,7 @@ def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str]
 
 	# TODO dependent on the data type i want to use different correlation methods...
 	if groupby_options:
-		grouped_data = data.drop(["ID"], axis=1).groupby(groupby_options)
+		grouped_data = data.drop(["ID"], axis=1).groupby(groupby_options, sort=False)
 		return grouped_data.corr(numeric_only=True, method=correlation_method), grouped_data
 
 	return data.drop(["ID"], axis=1).corr(numeric_only=True, method=correlation_method), data
