@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
-import streamlit as st
 from bs4 import BeautifulSoup
 
 from utils.constants import IGNORE_VALUE
