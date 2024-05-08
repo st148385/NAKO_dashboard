@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
+import streamlit as st
 from bs4 import BeautifulSoup
 
 from utils.constants import IGNORE_VALUE
@@ -262,7 +263,7 @@ def manually_filter_and_merge_data(
 	return df, mapping_dict, feature_dict
 
 
-# @st.cache_data
+@st.cache_data
 def extract_dataset_information(
 	data: pd.DataFrame,
 	metadata: pd.DataFrame,
@@ -331,7 +332,7 @@ def extract_dataset_information(
 	return feature_dict, filtered_data, mapping_dict
 
 
-# @st.cache_data
+@st.cache_data
 def calculate_correlation_groupby(data: pd.DataFrame, groupby_options: List[str], correlation_method: str):
 	"""Calculate the correlation based on the grouped dataFrame.
 
