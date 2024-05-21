@@ -136,3 +136,18 @@ def create_plotly_scatterplot(
 				selector={"name": str(label)},
 			)
 	return fig
+
+
+def create_plotly_heatmap(data: pd.DataFrame, cmap: str = "RdBu_r", zmin: float = -1, zmax: float = 1):
+	"""_summary_
+
+	:param data: _description_
+	:type data: pd.DataFrame
+	:param cmap: _description_, defaults to "RdBu_r"
+	:type cmap: str, optional
+	:param zmin: _description_, defaults to -1
+	:type zmin: float, optional
+	:param zmax: _description_, defaults to 1
+	:type zmax: float, optional
+	"""
+	return px.imshow(data, color_continuous_scale=cmap, origin="lower", zmax=zmax, zmin=zmin, width=800, height=800)

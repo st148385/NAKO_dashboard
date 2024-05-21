@@ -10,7 +10,7 @@ from utils.preprocessing_utils import (
 	read_mri_data_from_folder,
 )
 from utils.reading_utils import read_csv_file_cached
-from utils.visu_utils import create_plotly_histogram, create_plotly_scatterplot
+from utils.visu_utils import create_plotly_heatmap, create_plotly_histogram, create_plotly_scatterplot
 
 if "_dataset_configuration_button" not in st.session_state:
 	st.session_state.dataset_configuration_button = False
@@ -125,7 +125,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 				format_func=lambda option: f"[{option}] --- {feature_dict[option]['info_text']}",
 			)
 
-		fig_corr = create_plotly_scatterplot(
+		fig_relation = create_plotly_scatterplot(
 			data=filtered_data,
 			feature1=feature1_corr,
 			feature2=feature2_corr,
@@ -136,7 +136,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		_, mid2, _ = st.columns((4, 10, 4))
 		with mid2:
-			st.plotly_chart(fig_corr)
+			st.plotly_chart(fig_relation)
 		sub_df = filtered_data[filtered_data[[feature1_corr, feature2_corr]].ne("").all(axis=1)][
 			[feature1_corr, feature2_corr]
 		]
@@ -157,6 +157,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			""",
 		)
 
+		# ---------------- GROUPBY CORRELATION ---------------------------- #
+
 		groupby_feature_list = [feat for feat, feat_info in feature_dict.items() if feat_info["nominal/ordinal"]]
 		groupby_options = st.multiselect(
 			"How do you want to group the data",
@@ -166,41 +168,53 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			max_selections=MAX_GROUPBY_NUMBER,
 		)
 
-		groupby_columns = st.columns(len(groupby_options))
-		unique_values_per_groupby_option = {feat: filtered_data[feat].unique() for feat in groupby_options}
+		# Get the unique values as selecting option dropping nan
+		unique_values_per_groupby_option = {
+			feat: filtered_data[feat].dropna(inplace=False).unique() for feat in groupby_options
+		}
 
-		for i, (take_col, col_feat) in enumerate(zip(groupby_columns, groupby_options)):
-			with take_col:
-				st.selectbox(
-					f"Choose unique values from: {col_feat} --- {feature_dict[col_feat]['info_text']}",
-					unique_values_per_groupby_option[col_feat],
-					format_func=lambda option: f"[{option}] --- {mapping_dict[col_feat].get(option)}",
-					key=f"groupby_feature_{str(i)}",
-				)
+		if groupby_options:
+			groupby_columns = st.columns(len(groupby_options))
+			# ---
+			for i, (take_col, col_feat) in enumerate(zip(groupby_columns, groupby_options)):
+				with take_col:
+					st.selectbox(
+						f"Choose unique values from: {col_feat} --- {feature_dict[col_feat]['info_text']}",
+						unique_values_per_groupby_option[col_feat],
+						format_func=lambda option: f"[{option}] --- {mapping_dict[col_feat].get(option)}",
+						key=f"groupby_feature_{str(i)}",
+					)
 
 		correlation, grouped_data = calculate_correlation_groupby(filtered_data, groupby_options, correlation_method)
 
 		# Initialize the filter condition
-		filter_condition = None
-
+		filter_condition = []
 		# Iterate over the groupby_options
-		for i in range(len(groupby_options)):
+		for i, feature in enumerate(groupby_options):
 			# Get the feature value from session state
 			feature_value = st.session_state[f"groupby_feature_{i}"]
 			# Add condition for the current feature-value pair
-			if filter_condition is None:
-				filter_condition = correlation[groupby_options[i]] == feature_value
+			if not any(filter_condition):
+				filter_condition = correlation[feature] == feature_value
 			else:
-				filter_condition &= correlation[groupby_options[i]] == feature_value
+				filter_condition &= correlation[feature] == feature_value
 
 		# Apply the filter condition to get the sub dataframe
-		temp_corr = correlation[filter_condition]
-		import plotly.express as px
 
-		te = px.imshow(temp_corr, color_continuous_scale="RdBu_r", origin="lower")
-		st.plotly_chart(te)
-		st.write(temp_corr)
-		# correlation.query("@groupby_options[0] == @st.session_state['groupby_feature_1']")
+		filtered_correlation = correlation
+		if any(filter_condition):
+			filtered_correlation = correlation[filter_condition]
+			# Remove the groupby columns and set index to be features
+			filtered_correlation = filtered_correlation.drop(groupby_options, axis="columns")
+			filtered_correlation.set_index(filtered_correlation.columns[0], inplace=True)
+
+		# Create plot
+		correlation_heatmap = create_plotly_heatmap(filtered_correlation, cmap="RdBu_r", zmin=-1, zmax=1)
+		_, mid3, _ = st.columns((4, 10, 4))
+		with mid3:
+			st.plotly_chart(correlation_heatmap)
+
+		st.write(filtered_correlation)
 
 		col5, col6 = st.columns(2)
 		"""
