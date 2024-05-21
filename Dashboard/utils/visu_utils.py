@@ -150,4 +150,4 @@ def create_plotly_heatmap(data: pd.DataFrame, cmap: str = "RdBu_r", zmin: float 
 	:param zmax: _description_, defaults to 1
 	:type zmax: float, optional
 	"""
-	return px.imshow(data, color_continuous_scale=cmap, origin="lower", zmax=zmax, zmin=zmin)
+	return px.imshow(data, color_continuous_scale=cmap, origin="lower", zmax=zmax, zmin=zmin, width=800, height=800)

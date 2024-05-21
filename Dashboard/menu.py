@@ -210,7 +210,9 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		# Create plot
 		correlation_heatmap = create_plotly_heatmap(filtered_correlation, cmap="RdBu_r", zmin=-1, zmax=1)
-		st.plotly_chart(correlation_heatmap)
+		_, mid3, _ = st.columns((4, 10, 4))
+		with mid3:
+			st.plotly_chart(correlation_heatmap)
 
 		st.write(filtered_correlation)
 
