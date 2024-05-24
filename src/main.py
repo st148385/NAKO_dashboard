@@ -2,7 +2,7 @@ import logging
 
 import gin
 from absl import app, flags
-from data.preprocess import DataPreprocessorBase, ScikitLearnPreprocessor, TensorFlowPreprocessor
+from data.preprocess import TensorFlowPreprocessor
 from utils import utils_misc, utils_params
 
 # Define different arguments for the main

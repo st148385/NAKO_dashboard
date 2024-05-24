@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import gin
 import polars as pl
@@ -44,13 +44,21 @@ class DataPreprocessorBase:
 			additional_data = pl.read_csv(data_path, separator=";", encoding="latin1")
 			self.data = self.data.join(additional_data, on="ID", how="left")
 
+		self._validate_target_feature(self.data, self.target_feature)
+
 	@staticmethod
-	def _validate_paths(data_paths):
+	def _validate_paths(data_paths: List[str]) -> None:
 		"""Validates that the required paths exist and are files."""
 		for data_type, path in data_paths.items():
 			path = Path(path)
 			if not path.is_file():
 				raise FileNotFoundError(f"{data_type} not found at {path}")
+
+	@staticmethod
+	def _validate_target_feature(data: pl.DataFrame, feature: str) -> None:
+		"""Check if the target_feature is even included in data."""
+		if not feature in data.columns:
+			raise KeyError(f"Target feature: {feature} not included in data")
 
 	def transform(self):
 		"""Transforms the data into the desired format.
