@@ -1,5 +1,17 @@
 # Input pipeline
+<<<<<<< HEAD
 # Stuff like regression or classification
+=======
+# DataPreprocessor
+DataPreprocessor.data_paths_unified = {
+    "metadata_path": "/home/artur/Desktop/FA/data/NAKO_tabular/30k_metadata/NAKO-536_2023-07-13_Erstuntersuchung_MRT_PSN_wie_194_Metadaten.csv",
+    "data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/30k_metadata/NAKO-536_2023-07-13_Erstuntersuchung_MRT_PSN_wie_194.csv",
+    "Fat_fraction_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/Fat_Fractions.csv"
+    }
+DataPreprocessor.target_feature = "sa_ogtt0"
+DataPreprocessor.task = "regression"
+DataPreprocessor.format = "tensorflow"
+>>>>>>> ff3076d (draft pipeline skeleton)
 
 
 # Model related stuff
