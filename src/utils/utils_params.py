@@ -1,45 +1,53 @@
 import datetime
-import os
+from pathlib import Path
 
 
-def gen_run_folder(path_model_id=""):
-	run_paths = dict()
+def gen_run_folder(experiment_dir=None):
+	"""
+	Generates a run folder for an experiment.
 
-	if path_model_id is None:
-		path_model_id = ""
+	Behavior:
+	- If `experiment_dir` is a valid path, use it as is.
+	- If `experiment_dir` is a string (not a path), create a new folder within
+	  the "experiments" directory with that name.
+	- If `experiment_dir` is None, generate a new folder using a timestamp.
 
-	path_model_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "experiments"))
+	Args:
+	    experiment_dir: Optional string or Path object representing the experiment directory.
 
-	if not os.path.isdir(os.path.join(path_model_root, path_model_id)) or (path_model_id == ""):
-		date_creation = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S-%f")
-		run_id = "run_" + date_creation
-		if path_model_id:
-			run_id += "_" + path_model_id
-		run_paths["path_model_id"] = os.path.join(path_model_root, run_id)
-		run_paths["model_id"] = run_id
+	Returns:
+	    A dictionary containing paths for the run folder, logs, checkpoints, and configuration.
+	"""
+
+	root_dir = Path(__file__).resolve().parents[2] / "experiments"
+
+	if isinstance(experiment_dir, str):
+		model_path = root_dir / experiment_dir
+	elif isinstance(experiment_dir, Path):
+		# If Path object, check if it's a directory and within the root_dir
+		if experiment_dir.is_dir() and root_dir in experiment_dir.parents:
+			model_path = experiment_dir
+		else:
+			raise ValueError(f"Invalid experiment_dir path: {experiment_dir}")
 	else:
-		run_paths["path_model_id"] = os.path.join(path_model_root, path_model_id)
-		run_paths["model_id"] = path_model_id
+		# If None or not a valid path, generate a timestamped folder
+		model_id = f"run_{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S-%f')}"
+		model_path = root_dir / model_id
 
-	run_paths["path_logs_train"] = os.path.join(run_paths["path_model_id"], "logs", "run.log")
-	# run_paths['path_logs_eval'] = os.path.join(run_paths['path_model_id'], 'logs', 'eval', 'run.log')
-	run_paths["path_ckpts_train"] = os.path.join(run_paths["path_model_id"], "ckpts")
-	# run_paths['path_ckpts_eval'] = os.path.join(run_paths['path_model_id'], 'ckpts', 'eval')
-	run_paths["path_gin"] = os.path.join(run_paths["path_model_id"], "config_operative.gin")
+	# Create model directory if it doesn't exist
+	model_path.mkdir(parents=True, exist_ok=True)
 
-	# Create folders
-	for k, v in run_paths.items():
-		if any([x in k for x in ["path_model", "path_ckpts"]]):
-			if not os.path.exists(v):
-				os.makedirs(v, exist_ok=True)
+	run_paths = {
+		"path_model_id": model_path,
+		"model_id": model_path.name,
+		"path_logs_train": model_path / "logs" / "run.log",
+		"path_ckpts_train": model_path / "ckpts",
+		"path_gin": model_path / "config_operative.gin",
+	}
 
-	# Create files
-	for k, v in run_paths.items():
-		if any([x in k for x in ["path_logs"]]):
-			if not os.path.exists(v):
-				os.makedirs(os.path.dirname(v), exist_ok=True)
-				with open(v, "a"):
-					pass  # atm file creation is sufficient
+	# Create log directory and ensure the log file exists
+	(model_path / "logs").mkdir(exist_ok=True)
+	(run_paths["path_logs_train"]).touch(exist_ok=True)
 
 	return run_paths
 
