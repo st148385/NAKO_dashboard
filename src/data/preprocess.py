@@ -55,7 +55,7 @@ class DataPreprocessor:
 	):
 		"""Initializes the DataPreprocessor.
 
-		:param data_paths_unified: Dictionary containing paths to the data files.
+		:param data_paths: Dictionary containing paths to the data files.
 		:param target_feature: Name of the target feature.
 		:param task: The machine learning task ("regression" or "classification").
 		:param format: The desired output data format (e.g., "tensorflow" or "scikit").
