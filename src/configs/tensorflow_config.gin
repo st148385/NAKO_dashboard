@@ -1,0 +1,4 @@
+include "configs/base_config.gin"
+
+# EXAMPLE
+TensorFlowPreprocessor.batch_size = 32  # Add subclass-specific config
