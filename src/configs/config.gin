@@ -1,9 +1,13 @@
 # Input pipeline
 # DataPreprocessor
-DataPreprocessor.data_paths_unified = {
+DataPreprocessor.data_paths= {
     "metadata_path": "/home/artur/Desktop/FA/data/NAKO_tabular/30k_metadata/NAKO-536_2023-07-13_Erstuntersuchung_MRT_PSN_wie_194_Metadaten.csv",
     "data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/30k_metadata/NAKO-536_2023-07-13_Erstuntersuchung_MRT_PSN_wie_194.csv",
-    "Fat_fraction_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/Fat_Fractions.csv"
+    "Fat_fraction_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/Fat_Fractions.csv",
+    "CSA_GluPso_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/CSA_GluPso_real.csv",
+    "CSA_Thigh_real_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/CSA_Thigh_real.csv",
+    "Volumes_GluPso_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/volumes_GluPso_real.csv",
+    "Volumes_Thigh_real_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/volumes_Thigh_real.csv",
     }
 DataPreprocessor.target_feature = "sa_ogtt0"
 DataPreprocessor.task = "regression"

@@ -3,20 +3,36 @@ from pathlib import Path
 
 
 def gen_run_folder(experiment_dir=None):
-	"""
-	Generates a run folder for an experiment.
+	"""Generates a run folder for an experiment.
 
-	Behavior:
-	- If `experiment_dir` is a valid path, use it as is.
-	- If `experiment_dir` is a string (not a path), create a new folder within
-	  the "experiments" directory with that name.
-	- If `experiment_dir` is None, generate a new folder using a timestamp.
+	This function determines the appropriate path for storing experiment data based
+	on the input and creates the necessary directories and files.
 
-	Args:
-	    experiment_dir: Optional string or Path object representing the experiment directory.
+	**Behavior:**
 
-	Returns:
-	    A dictionary containing paths for the run folder, logs, checkpoints, and configuration.
+	- **Valid Path:** If `experiment_dir` is a valid path, it will be used as the
+	  experiment directory.
+	- **String (Not Path):** If `experiment_dir` is a string but not a valid path,
+	  a new folder with that name will be created within the default "experiments"
+	  directory.
+	- **None:** If `experiment_dir` is None, a new timestamped folder will be
+	  created within the default "experiments" directory.
+
+	:param experiment_dir: A string or Path object representing the experiment
+		directory. Can be a full path, a relative path, or just the folder name.
+	:type experiment_dir: str or pathlib.Path, optional
+
+	:raises ValueError: If `experiment_dir` is a Path object that is invalid or
+		does not reside within the project's "experiments" directory.
+
+	:return: A dictionary containing the following paths:
+
+		* **path_model_id:** The full path to the experiment directory.
+		* **model_id:** The name of the experiment directory.
+		* **path_logs_train:** The full path to the training log file.
+		* **path_ckpts_train:** The full path to the training checkpoints directory.
+		* **path_gin:** The full path to the operative configuration file.
+	:rtype: dict
 	"""
 
 	root_dir = Path(__file__).resolve().parents[2] / "experiments"

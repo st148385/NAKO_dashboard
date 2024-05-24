@@ -8,69 +8,84 @@ import polars as pl
 
 @gin.configurable
 class DataPreprocessor:
-	"""Data preprocessor for pipeline.
+	"""A configurable data preprocessor for machine learning pipelines.
 
-	This preprocessor is used to
-		- load data
-		- merge data
-		- compute feature selection/feature reduction
-		- create correct output structure (e.g. tensor batches or numpy arrays)
+	This class handles essential preprocessing steps including:
 
+	1. Loading data from CSV files (metadata, main data, and optional additional datasets).
+	2. Merging the main dataset with additional datasets using a common unique identifier (``ID``).
+	3. (Optional) Performing feature selection or reduction based on configuration.
+	4. Preparing data in the desired format for the specified task (e.g., TensorFlow tensors, NumPy arrays).
 
-	The overall operations shall be predefined using some GIN config.
-	The config shall hold different stuff, e.g.
-	- data_path: dict which can hold multiple relevant paths
-	{
-		"metadata": <some_path>,
-		"data": <some_path>,
-		"additional_data": <some_path> (e.g. MRI)
+	Configuration (GIN):
+
+	- **data_paths (dict):**
+		- ``metadata_path`` (str): Path to the metadata CSV file.
+		- ``data_path`` (str): Path to the main data CSV file.
+		- Additional keys (optional): Paths to other datasets to be merged, named as you prefer.
+	- **target_feature (str):** The name of the feature to be predicted.
+	- **task (str):** The type of machine learning task ("regression" or "classification").
+	- **format (str):** The desired output data format (e.g., "tensorflow" or "scikit").
+
+	Example GIN configuration:
+
+	```
+	DataPreprocessor.data_paths = {
+	    "metadata_path": "/path/to/metadata.csv",
+	    "data_path": "/path/to/data.csv",
+	    "mri_data_path": "/path/to/mri_data.csv",
 	}
-	metadata and data shall in general be included. addtional data must be handled
-	optionally with the UNIQUE KEY inside of the data ID (e.g. merge using pd.merge or polars join)
+	DataPreprocessor.target_feature = "some_label"
+	DataPreprocessor.task = "regression"
+	DataPreprocessor.format = "tensorflow"
+	```
 
-	- target_feature: a feature which shall be targetted to be predicted
-	the idea is to hold the pipeline general e.g. defining the target feature
-	is necessary for a reasonable feature selection and building the data/label pairs
+	Note:
 
-	- task: {"regression", "classification"}
-	- format: {"tensorflow", "scikit"} (?)
+	* All CSV files must contain a column named "ID" for merging purposes.
+
 	"""
 
 	def __init__(
 		self,
-		data_paths_unified: Dict[str, str],
+		data_paths: Dict[str, str],
 		target_feature: str,
 		task: str,
 		format: str,
 	):
-		# Validate if metadata and data is provided.
-		assert Path(
-			data_paths_unified.get("metadata_path", "")
-		).is_file(), f'Metadata not found at {data_paths_unified.get("metadata_path", "")}, check the config file...'
-		assert Path(
-			data_paths_unified.get("data_path", "")
-		).is_file(), f'Data not found at {data_paths_unified.get("data_path", "")}, check the config file...'
-		# Get metadata and data paths. If there are remaining paths inside pf data_paths_unified, they are additional
-		# Data which must be merged to the "orginal data"
-		metadata_path = data_paths_unified.pop("metadata_path")
-		data_path = data_paths_unified.pop("data_path")
+		"""Initializes the DataPreprocessor.
 
-		# Read the data...
-		self.data = pl.read_csv(data_path, encoding="latin1", separator=";")  # sep should be general now...
-		# TODO load actual setting of metadata and probably remove infer and truncate...
-		self.metadata = pl.read_csv(
-			metadata_path, encoding="latin1", separator=";", infer_schema_length=0, truncate_ragged_lines=True
-		)  # sep should be general now...
-
-		# Merging the original data with all additonal data given.
-		for additional_data_name, additional_data_path in data_paths_unified.items():
-			logging.info(f"Original data is merged with: {additional_data_name}")
-			assert Path(
-				additional_data_path
-			).is_file(), f"Data path is not valid: {additional_data_path}. Please check path and config"
-			additional_data = pl.read_csv(additional_data_path, separator=";", encoding="latin1")
-			self.data = self.data.join(additional_data, on="ID", how="left")
-
+		:param data_paths_unified: Dictionary containing paths to the data files.
+		:param target_feature: Name of the target feature.
+		:param task: The machine learning task ("regression" or "classification").
+		:param format: The desired output data format (e.g., "tensorflow" or "scikit").
+		"""
 		self.target_feature = target_feature
 		self.task = task
 		self.format = format
+
+		self._validate_paths(data_paths)
+
+		# Load metadata and main data
+		self.metadata = pl.read_csv(
+			data_paths.pop("metadata_path"),
+			separator=";",
+			encoding="latin1",
+			infer_schema_length=0,  # TODO this might resolve for new version of data
+			truncate_ragged_lines=True,
+		)
+		self.data = pl.read_csv(data_paths.pop("data_path"), separator=";", encoding="latin1")
+
+		# Merge additional data (if any)
+		for data_name, data_path in data_paths.items():
+			logging.info(f"Merging '{data_name}' data...")
+			additional_data = pl.read_csv(data_path, separator=";", encoding="latin1")
+			self.data = self.data.join(additional_data, on="ID", how="left")
+
+	@staticmethod
+	def _validate_paths(data_paths):
+		"""Validates that the required paths exist and are files."""
+		for data_type, path in data_paths.items():
+			path = Path(path)
+			if not path.is_file():
+				raise FileNotFoundError(f"{data_type} not found at {path}")
