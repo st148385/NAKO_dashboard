@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Dict
 
 import gin
-import polars as pl
 from utils.reading import read_data_with_polars
 
 
@@ -44,18 +43,18 @@ class AbstractWorkflow(ABC):
 
 		# TODO might outsource to the subclasses...
 		# Read metadata and actual data
-		self.metadata = pl.read_csv(
+		self.metadata = read_data_with_polars(
 			data_paths.pop("metadata_path"),
 			separator=";",
 			encoding="latin1",
 			infer_schema_length=0,  # TODO this might resolve for new version of data
 			truncate_ragged_lines=True,
 		)
-		self.data = pl.read_csv(data_paths.pop("data_path"), separator=";", encoding="latin1")
+		self.data = read_data_with_polars(data_paths.pop("data_path"), separator=";", encoding="latin1")
 		# Merge additional data (if any)
 		for data_name, data_path in data_paths.items():
 			logging.info(f"Merging '{data_name}' data...")
-			additional_data = pl.read_csv(data_path, separator=";", encoding="latin1")
+			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
 			self.data = self.data.join(additional_data, on="ID", how="left")
 
 		self.feature_selection = feature_selection

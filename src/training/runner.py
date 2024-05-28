@@ -1,5 +1,5 @@
 import gin
-from data.dataloders import ScikitLearnDataloader, TensorflowDataloader
+from data.dataloaders.dataloaders import ScikitLearnDataloader, TensorflowDataloader
 from data.workflows import Diabetes13kWorkflow, Metadata30kWorkflow
 
 

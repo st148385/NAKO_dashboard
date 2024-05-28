@@ -4,7 +4,7 @@ import polars as pl
 import yaml
 
 
-def read_data_with_polars(file_path: Path) -> pl.DataFrame:
+def read_data_with_polars(file_path: Path, **kwargs) -> pl.DataFrame:
 	"""Reads data from a file using Polars, inferring the format from the extension.
 
 	Supported formats:
@@ -21,10 +21,20 @@ def read_data_with_polars(file_path: Path) -> pl.DataFrame:
 	:raises ValueError: If the file format is not supported.
 	"""
 
-	file_extension = file_path.suffix.lstrip(".")
+	file_extension = Path(file_path).suffix.lstrip(".")
 
 	if file_extension == "csv":
-		return pl.read_csv(file_path)
+		separator = kwargs["separator"]
+		encoding = kwargs["encoding"]
+		infer_schema_length = kwargs.get("infer_schema_length", None)  # TODO this might resolve for new version of data
+		truncate_ragged_lines = kwargs.get("truncate_ragged_lines", False)
+		return pl.read_csv(
+			file_path,
+			separator=separator,
+			encoding=encoding,
+			infer_schema_length=infer_schema_length,
+			truncate_ragged_lines=truncate_ragged_lines,
+		)
 	elif file_extension == "json":
 		return pl.read_json(file_path)
 	elif file_extension == "parquet":
