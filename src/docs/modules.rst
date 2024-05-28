@@ -5,4 +5,7 @@ src
    :maxdepth: 4
 
    main
+   train
+   data
+   training
    utils

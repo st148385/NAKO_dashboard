@@ -1,18 +1,16 @@
-.. Research-Thesis documentation master file, created by
-   sphinx-quickstart on Thu Apr 11 17:47:05 2024.
+.. Reasearch-thesis documentation master file, created by
+   sphinx-quickstart on Tue May 28 16:05:30 2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Research-Thesis's documentation!
-===========================================
+Welcome to Reasearch-thesis's documentation!
+============================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
-   intro
+
    modules
-   examples
 
 
 Indices and tables

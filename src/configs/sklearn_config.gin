@@ -1,0 +1,4 @@
+include "configs/__base__/base_config.gin"
+
+# EXAMPLE
+ScikitLearnDataloader.scaler = "StandardScaler"  # Subclass-specific
