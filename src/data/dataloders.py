@@ -1,14 +1,15 @@
 import logging
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import gin
 import polars as pl
 
 
 @gin.configurable
-class DataPreprocessorBase:
-	"""Base class for data preprocessing in ML pipelines.
+class BaseDataLoader(ABC):
+	"""Base class for data loading.
 
 	Handles loading, merging, and basic validation of data from CSV files.
 
@@ -18,9 +19,9 @@ class DataPreprocessorBase:
 	Configuration (GIN):
 
 	- **data_paths (dict):**
-	    - ``metadata_path`` (str): Path to the metadata CSV file.
-	    - ``data_path`` (str): Path to the main data CSV file.
-	    - Additional keys (optional): Paths to other datasets to be merged, named as you prefer.
+		- ``metadata_path`` (str): Path to the metadata CSV file.
+		- ``data_path`` (str): Path to the main data CSV file.
+		- Additional keys (optional): Paths to other datasets to be merged, named as you prefer.
 	- **target_feature (str):** The name of the feature to be predicted.
 	"""
 
@@ -28,6 +29,7 @@ class DataPreprocessorBase:
 		self.target_feature = target_feature
 		self._validate_paths(data_paths)
 
+		# TODO might be changes if the data is already read via workflow
 		# Read CSV files
 		self.metadata = pl.read_csv(
 			data_paths.pop("metadata_path"),
@@ -47,7 +49,7 @@ class DataPreprocessorBase:
 		self._validate_target_feature(self.data, self.target_feature)
 
 	@staticmethod
-	def _validate_paths(data_paths: List[str]) -> None:
+	def _validate_paths(data_paths: Dict[str, str]) -> None:
 		"""Validates that the required paths exist and are files."""
 		for data_type, path in data_paths.items():
 			path = Path(path)
@@ -57,25 +59,26 @@ class DataPreprocessorBase:
 	@staticmethod
 	def _validate_target_feature(data: pl.DataFrame, feature: str) -> None:
 		"""Check if the target_feature is even included in data."""
-		if not feature in data.columns:
+		if feature not in data.columns:
 			raise KeyError(f"Target feature: {feature} not included in data")
 
+	@abstractmethod
 	def transform(self):
 		"""Transforms the data into the desired format.
 
 		This method is abstract and must be implemented by subclasses.
 		"""
-		raise NotImplementedError("Subclasses must implement the transform method.")
+		pass
 
 
 @gin.configurable
-class TensorFlowPreprocessor(DataPreprocessorBase):
-	"""Data preprocessor for TensorFlow models."""
+class TensorflowDataloader(BaseDataLoader):
+	"""Data Loader for TensorFlow models."""
 
 	def __init__(self, batch_size: int, **kwargs):
-		"""Initializes the TensorFlowPreprocessor.
+		"""Initializes the TensorFlowLoader.
 
-		Since `TensorFlowPreprocessor` extends `DataPreprocessorBase`,
+		Since `TensorFlowLoader` extends `BaseDataLoader`,
 		it inherits its configuration parameters.
 
 		:param data_paths: (Inherited) Dictionary containing paths to the data files.
@@ -93,13 +96,13 @@ class TensorFlowPreprocessor(DataPreprocessorBase):
 
 
 @gin.configurable
-class ScikitLearnPreprocessor(DataPreprocessorBase):
-	"""Data preprocessor for scikit-learn models."""
+class ScikitLearnDataloader(BaseDataLoader):
+	"""Data loader for scikit-learn models."""
 
 	def __init__(self, scaler, **kwargs):
-		"""Initializes the ScikitLearnPreprocessor.
+		"""Initializes the ScikitLearnDataloader.
 
-		Since `ScikitLearnPreprocessor` extends `DataPreprocessorBase`,
+		Since `ScikitLearnLoader` extends `BaseDataLoader`,
 		it inherits its configuration parameters.
 
 		:param data_paths: (Inherited) Dictionary containing paths to the data files.

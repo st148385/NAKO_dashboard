@@ -1,4 +1,4 @@
-include "configs/base_config.gin"
+include "configs/__base__/base_config.gin"
 
 # EXAMPLE
-ScikitLearnPreprocessor.scaler = "StandardScaler"  # Subclass-specific
+ScikitLearnDataloader.scaler = "StandardScaler"  # Subclass-specific

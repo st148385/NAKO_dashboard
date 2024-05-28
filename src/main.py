@@ -1,8 +1,10 @@
 import logging
+from pathlib import Path
 
 import gin
 from absl import app, flags
-from data.preprocess import TensorFlowPreprocessor
+from data.dataloders import ScikitLearnDataloader, TensorflowDataloader
+from data.workflows import Diabetes13kWorkflow, Metadata30kWorkflow
 from utils import utils_misc, utils_params
 
 # Define different arguments for the main
@@ -12,14 +14,10 @@ FLAGS = flags.FLAGS
 # TODO might remove to get train, eval and test included inside of single pipeline...
 flags.DEFINE_boolean("train", True, "Specify if train mode or eval mode.")
 flags.DEFINE_string(
-	"experiment_dir",
-	None,
-	"Specify folder to resume training, otherwise train from scratch",
+	"experiment_dir", None, "Specify folder to resume training, otherwise train from scratch", short_name="e"
 )
 
-
-# TODO remove, only for debugging
-FLAGS.experiment_dir = "debug"
+flags.DEFINE_string("config_file", None, "Specify the configuration file to use, e.g. train_config.gin", short_name="c")
 
 
 def main(argv) -> None:
@@ -27,11 +25,11 @@ def main(argv) -> None:
 	run_paths = utils_params.gen_run_folder(FLAGS.experiment_dir)
 	utils_misc.set_loggers(run_paths["path_logs_train"], logging.INFO)
 
-	config_files = []
-	config_files.append("configs/tensorflow_config.gin")
+	# Parse provided config file
+	config_file = [Path("configs") / FLAGS.config_file]
+	gin.parse_config_files_and_bindings(config_file, [])
 
-	gin.parse_config_files_and_bindings(config_files, [])
-	dpc = TensorFlowPreprocessor()
+	dpc = TensorflowDataloader()
 
 	print(dpc.batch_size, dpc.data)
 	return

@@ -1,0 +1,13 @@
+include "configs/__base__/base_config.gin"
+
+
+# WorkflowSpecific
+Diabetes13kWorkflow.feature_selection = {
+    "basis_age": None,
+    "basis_sex": None,
+}
+
+
+# DataLoader specific
+DataLoader = @TensorflowDataloader
+TensorflowDataloader.batch_size = 32
