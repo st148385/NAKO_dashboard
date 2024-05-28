@@ -72,6 +72,8 @@ class AbstractWorkflow(ABC):
 				data = transform_func(data, column)
 			else:
 				raise ValueError(f"Invalid transformation for column '{column}': {transform_enum}")
+
+		# TODO also drop all features not explicitly listed in feature_selection
 		return data
 		pass
 
