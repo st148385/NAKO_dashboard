@@ -8,3 +8,4 @@ class Runner:
 	def __init__(self, dataloader, workflow):
 		self.dataloader = dataloader
 		self.workflow = workflow
+		self.workflow.run()

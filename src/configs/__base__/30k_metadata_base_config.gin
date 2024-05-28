@@ -1,3 +1,7 @@
+
+import transformations
+
+
 # Base Workflow settings
 Metadata30kWorkflow.data_paths = {
     "metadata_path": "/home/artur/Desktop/FA/data/NAKO_tabular/30k_metadata/NAKO-536_2023-07-13_Erstuntersuchung_MRT_PSN_wie_194_Metadaten.csv",
@@ -9,9 +13,9 @@ Metadata30kWorkflow.data_paths = {
     "Volumes_Thigh_real_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/volumes_Thigh_real.csv",
     }
 Metadata30kWorkflow.feature_selection = {
-    '0': None,
-    '0_right': None,
-    '1': None,
+    '0': %TRANSFORMS.DROP,
+    '0_right': %TRANSFORMS.DROP,
+    '1': %TRANSFORMS.DROP,
     '1_right': None,
     '2': None,
     '2_right': None,

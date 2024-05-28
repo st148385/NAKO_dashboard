@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict
 
 import gin
+from transformations import TRANSFORMS, TRANSFORMS_DICT
 from utils.reading import read_data_with_polars
 
 
@@ -63,6 +64,15 @@ class AbstractWorkflow(ABC):
 	@abstractmethod
 	def preprocess(self, data):
 		"""Preprocesses the raw data from the CSV file."""
+		for column, transform_enum in self.feature_selection.items():  # Now using enum values
+			if transform_enum is None:
+				continue
+			elif transform_enum in TRANSFORMS:  # Check if it's a valid enum value
+				transform_func = TRANSFORMS_DICT[transform_enum]
+				data = transform_func(data, column)
+			else:
+				raise ValueError(f"Invalid transformation for column '{column}': {transform_enum}")
+		return data
 		pass
 
 	@abstractmethod
@@ -77,13 +87,12 @@ class AbstractWorkflow(ABC):
 
 	def run(self):
 		"""Executes the entire workflow."""
-		data = read_data_with_polars(self.data_paths)
 
-		data = self.preprocess(data)
-		data = self.process(data)
-		data = self.postprocess(data)
+		self.data = self.preprocess(self.data)
+		self.data = self.process(self.data)
+		self.data = self.postprocess(self.data)
 
-		return data
+		return self.data
 
 	@staticmethod
 	def _validate_paths(data_paths: Dict[str, str]) -> None:
