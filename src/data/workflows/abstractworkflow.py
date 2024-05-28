@@ -70,10 +70,8 @@ class AbstractWorkflow(ABC):
 		for column, transform_list in self.feature_selection.items():  # Now using enum values
 			if column in not_listed_features:
 				not_listed_features.remove(column)
-
 			if not isinstance(transform_list, list):
 				transform_list = [transform_list]
-
 			if transform_list[0] is None:
 				continue
 			elif set(transform_list).issubset(set(TRANSFORMS)):  # Check if it's a valid enum value
