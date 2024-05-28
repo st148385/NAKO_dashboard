@@ -64,7 +64,12 @@ class AbstractWorkflow(ABC):
 	@abstractmethod
 	def preprocess(self, data):
 		"""Preprocesses the raw data from the CSV file."""
+
+		not_listed_features = data.columns
+
 		for column, transform_enum in self.feature_selection.items():  # Now using enum values
+			if column in not_listed_features:
+				not_listed_features.remove(column)
 			if transform_enum is None:
 				continue
 			elif transform_enum in TRANSFORMS:  # Check if it's a valid enum value
@@ -73,9 +78,11 @@ class AbstractWorkflow(ABC):
 			else:
 				raise ValueError(f"Invalid transformation for column '{column}': {transform_enum}")
 
-		# TODO also drop all features not explicitly listed in feature_selection
+		# drop features which have not been mentioned explicitly
+		if not_listed_features:
+			logging.warn(f"Dropping not explicilty listed features from data: {not_listed_features}")
+		data = data.drop(not_listed_features)
 		return data
-		pass
 
 	@abstractmethod
 	def process(self, data):
@@ -90,7 +97,9 @@ class AbstractWorkflow(ABC):
 	def run(self):
 		"""Executes the entire workflow."""
 
+		print(len(self.data.columns))
 		self.data = self.preprocess(self.data)
+		print(len(self.data.columns))
 		self.data = self.process(self.data)
 		self.data = self.postprocess(self.data)
 
