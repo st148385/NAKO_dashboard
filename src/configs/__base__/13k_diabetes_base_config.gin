@@ -1,5 +1,5 @@
 # Base Workflow settings
-Diabetes13kWorkflow.data_paths= {
+Diabetes13kWorkflow.data_paths = {
     "metadata_path": "/home/artur/Desktop/FA/data/NAKO_tabular/13k_diabetes/NAKO_536_61223_export_baseln_MRT_PSN_wie_194_Metadaten.csv",
     "data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/13k_diabetes/NAKO_536_61223_export_baseln_MRT_PSN_wie_194.csv",
     "Fat_fraction_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/Fat_Fractions.csv",
@@ -10,6 +10,16 @@ Diabetes13kWorkflow.data_paths= {
     }
 
 Diabetes13kWorkflow.feature_selection = {
+    '0': None,
+    '0_right': None,
+    '1': None,
+    '1_right': None,
+    '2': None,
+    '2_right': None,
+    '3': None,
+    '3_right': None,
+    '4': None,
+    '4_right': None,
     'BD01': None,
     'BD02': None,
     'BD035': None,
@@ -17,9 +27,33 @@ Diabetes13kWorkflow.feature_selection = {
     'BD05': None,
     'BD14': None,
     'BD17': None,
+    'CSA_Add_l': None,
+    'CSA_Add_l (mm^2)': None,
+    'CSA_Add_r': None,
+    'CSA_Add_r (mm^2)': None,
+    'CSA_Ext_l': None,
+    'CSA_Ext_l (mm^2)': None,
+    'CSA_Ext_r': None,
+    'CSA_Ext_r (mm^2)': None,
+    'CSA_Glu_l': None,
+    'CSA_Glu_l (mm^2)': None,
+    'CSA_Glu_r': None,
+    'CSA_Glu_r (mm^2)': None,
+    'CSA_Pso_l': None,
+    'CSA_Pso_l (mm^2)': None,
+    'CSA_Pso_r': None,
+    'CSA_Pso_r (mm^2)': None,
     'ID': None,
     'SE01': None,
     'SE02': None,
+    'Vol_Add_l (mm^3)': None,
+    'Vol_Add_r (mm^3)': None,
+    'Vol_Ext_l (mm^3)': None,
+    'Vol_Ext_r (mm^3)': None,
+    'Vol_Glu_l (mm^3)': None,
+    'Vol_Glu_r (mm^3)': None,
+    'Vol_Pso_l (mm^3)': None,
+    'Vol_Pso_r (mm^3)': None,
     'a_an_metdm1_age': None,
     'a_ethn1': None,
     'a_ethn2': None,
@@ -90,6 +124,16 @@ Diabetes13kWorkflow.feature_selection = {
     'd_usa_vat1': None,
     'd_usa_vat2': None,
     'ergo_pwc130': None,
+    'ff_Add_left': None,
+    'ff_Add_right': None,
+    'ff_Ext_left': None,
+    'ff_Ext_right': None,
+    'ff_GP_full': None,
+    'ff_Glu_left': None,
+    'ff_Glu_right': None,
+    'ff_Pso_left': None,
+    'ff_Pso_right': None,
+    'ff_Th_full': None,
     'hgr_lh1_kraft': None,
     'hgr_lh2_kraft': None,
     'hgr_lh3_kraft': None,
@@ -147,7 +191,7 @@ Diabetes13kWorkflow.feature_selection = {
     'ws_rh_innenrotation': None,
     'ws_rk_extension': None,
     'ws_rk_flexion': None
-    }
+ }
 
 ##################
 

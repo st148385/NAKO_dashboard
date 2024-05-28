@@ -1,4 +1,0 @@
-include "configs/__base__/base_config.gin"
-
-# EXAMPLE
-TensorflowDataloader.batch_size = 32  # Add subclass-specific config

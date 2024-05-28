@@ -29,24 +29,7 @@ class BaseDataLoader(ABC):
 		self.target_feature = target_feature
 		self._validate_paths(data_paths)
 
-		# TODO might be changes if the data is already read via workflow
-		# Read CSV files
-		self.metadata = pl.read_csv(
-			data_paths.pop("metadata_path"),
-			separator=";",
-			encoding="latin1",
-			infer_schema_length=0,  # TODO this might resolve for new version of data
-			truncate_ragged_lines=True,
-		)
-		self.data = pl.read_csv(data_paths.pop("data_path"), separator=";", encoding="latin1")
-
-		# Merge additional data (if any)
-		for data_name, data_path in data_paths.items():
-			logging.info(f"Merging '{data_name}' data...")
-			additional_data = pl.read_csv(data_path, separator=";", encoding="latin1")
-			self.data = self.data.join(additional_data, on="ID", how="left")
-
-		self._validate_target_feature(self.data, self.target_feature)
+		# self._validate_target_feature(self.data, self.target_feature)
 
 	@staticmethod
 	def _validate_paths(data_paths: Dict[str, str]) -> None:

@@ -1,5 +1,3 @@
-from typing import Dict
-
 import gin
 
 from .abstractworkflow import AbstractWorkflow

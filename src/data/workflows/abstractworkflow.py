@@ -1,8 +1,10 @@
+import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict
 
 import gin
+import polars as pl
 from utils.reading import read_data_with_polars
 
 
@@ -39,6 +41,23 @@ class AbstractWorkflow(ABC):
 
 		self._validate_paths(data_paths)
 		self.data_paths = data_paths
+
+		# TODO might outsource to the subclasses...
+		# Read metadata and actual data
+		self.metadata = pl.read_csv(
+			data_paths.pop("metadata_path"),
+			separator=";",
+			encoding="latin1",
+			infer_schema_length=0,  # TODO this might resolve for new version of data
+			truncate_ragged_lines=True,
+		)
+		self.data = pl.read_csv(data_paths.pop("data_path"), separator=";", encoding="latin1")
+		# Merge additional data (if any)
+		for data_name, data_path in data_paths.items():
+			logging.info(f"Merging '{data_name}' data...")
+			additional_data = pl.read_csv(data_path, separator=";", encoding="latin1")
+			self.data = self.data.join(additional_data, on="ID", how="left")
+
 		self.feature_selection = feature_selection
 
 	# TODO might reduce to only one process...
@@ -70,6 +89,13 @@ class AbstractWorkflow(ABC):
 	@staticmethod
 	def _validate_paths(data_paths: Dict[str, str]) -> None:
 		"""Validates that the required paths exist and are files."""
+
+		check_keys = {"metadata_path", "data_path"}
+		target_keys = set(data_paths.keys())
+
+		if not check_keys.issubset(target_keys):
+			raise KeyError(f"Keys: {check_keys} not in {target_keys}")
+
 		for data_type, path in data_paths.items():
 			path = Path(path)
 			if not path.is_file():
