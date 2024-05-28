@@ -14,7 +14,7 @@ Metadata30kWorkflow.data_paths = {
     }
 Metadata30kWorkflow.feature_selection = {
     '0': %TRANSFORMS.DROP,
-    '0_right': %TRANSFORMS.DROP,
+    '0_right': [%TRANSFORMS.MIN_MAX_NORM, %TRANSFORMS.DROP],
     '1': %TRANSFORMS.DROP,
     '1_right': None,
     '2': None,

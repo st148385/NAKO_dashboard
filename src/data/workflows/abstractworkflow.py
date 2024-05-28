@@ -67,14 +67,19 @@ class AbstractWorkflow(ABC):
 
 		not_listed_features = data.columns
 
-		for column, transform_enum in self.feature_selection.items():  # Now using enum values
+		for column, transform_list in self.feature_selection.items():  # Now using enum values
 			if column in not_listed_features:
 				not_listed_features.remove(column)
-			if transform_enum is None:
+
+			if not isinstance(transform_list, list):
+				transform_list = [transform_list]
+
+			if transform_list[0] is None:
 				continue
-			elif transform_enum in TRANSFORMS:  # Check if it's a valid enum value
-				transform_func = TRANSFORMS_DICT[transform_enum]
-				data = transform_func(data, column)
+			elif set(transform_list).issubset(set(TRANSFORMS)):  # Check if it's a valid enum value
+				for transform_enum in transform_list:
+					transform_func = TRANSFORMS_DICT[transform_enum]
+					data = transform_func(data, column)
 			else:
 				raise ValueError(f"Invalid transformation for column '{column}': {transform_enum}")
 
@@ -97,9 +102,7 @@ class AbstractWorkflow(ABC):
 	def run(self):
 		"""Executes the entire workflow."""
 
-		print(len(self.data.columns))
 		self.data = self.preprocess(self.data)
-		print(len(self.data.columns))
 		self.data = self.process(self.data)
 		self.data = self.postprocess(self.data)
 
