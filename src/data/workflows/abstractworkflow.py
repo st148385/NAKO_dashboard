@@ -26,7 +26,11 @@ class AbstractWorkflow(ABC):
 		This class cannot be instantiated directly.
 	"""
 
-	def __init__(self, data_paths: Dict[str, str]):
+	def __init__(
+		self,
+		data_paths: Dict[str, str],
+		feature_selection: Dict[str, str] = None,
+	):
 		"""_summary_
 
 		:param data_paths: _description_
@@ -35,6 +39,7 @@ class AbstractWorkflow(ABC):
 
 		self._validate_paths(data_paths)
 		self.data_paths = data_paths
+		self.feature_selection = feature_selection
 
 	# TODO might reduce to only one process...
 	@abstractmethod

@@ -3,8 +3,7 @@ from pathlib import Path
 
 import gin
 from absl import app, flags
-from data.dataloders import ScikitLearnDataloader, TensorflowDataloader
-from data.workflows import Diabetes13kWorkflow, Metadata30kWorkflow
+from training import Runner
 from utils import utils_misc, utils_params
 
 # Define different arguments for the main
@@ -29,9 +28,8 @@ def main(argv) -> None:
 	config_file = [Path("configs") / FLAGS.config_file]
 	gin.parse_config_files_and_bindings(config_file, [])
 
-	dpc = TensorflowDataloader()
+	runner = Runner()
 
-	print(dpc.batch_size, dpc.data)
 	return
 
 

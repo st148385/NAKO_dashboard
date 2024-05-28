@@ -1,13 +1,14 @@
-include "configs/__base__/13k_diabetes_base_config.gin"
+include "configs/__base__/30k_metadata_base_config.gin"
 
 
-# WorkflowSpecific
-Diabetes13kWorkflow.feature_selection = {
+# Specify the Runner specific stuff
+Runner.dataloader = @TensorflowDataloader()
+Runner.workflow = @Metadata30kWorkflow()
+
+# Afterwards you specify the specific Init arguments for the
+# classes used inside the Runner
+Metadata30kWorkflow.feature_selection = {
     "basis_age": None,
     "basis_sex": None,
 }
-
-
-# DataLoader specific
-DataLoader = @TensorflowDataloader
 TensorflowDataloader.batch_size = 32
