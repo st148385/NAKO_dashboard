@@ -1,3 +1,5 @@
+from typing import Union
+
 import gin
 from data.dataloaders.dataloaders import ScikitLearnDataloader, TensorflowDataloader
 from data.workflows import Diabetes13kWorkflow, Metadata30kWorkflow
@@ -5,15 +7,17 @@ from data.workflows import Diabetes13kWorkflow, Metadata30kWorkflow
 
 @gin.configurable
 class Runner:
-	def __init__(self, dataloader, workflow):
+	def __init__(
+		self,
+		dataloader: Union[ScikitLearnDataloader, TensorflowDataloader],
+		workflow: Union[Diabetes13kWorkflow, Metadata30kWorkflow],
+	):
 		# Init workflow with gin specified config
 		self.workflow = workflow
 		data = self.workflow.run()
-		# Workaround since init and providing data is nested in current setup
-		dataloader.load(data)
-		self.data = dataloader.get_dataset()
-		for batch in self.data:
-			print(batch["features"], batch["labels"])
+		# Workaround using "load" since init and providing data is nested in current setup
+		self.dataloader = dataloader
+		self.dataloader.load(data)
 
 	def run(self):
 		# Preprocess data
@@ -34,12 +38,10 @@ class Runner:
 
 	def _train_tensorflow(self):
 		# TensorFlow-specific training logic using tensors from self.dataloader
-		for batch in self.dataloader:
-			# ... your TensorFlow training code ...
-			pass
+		for batch in self.dataloader.get_dataset():
+			features, labels = batch["features"], batch["labels"]
 
 	def _train_scikitlearn(self):
 		# Scikit-learn training logic using NumPy arrays from self.dataloader
-		for batch in self.dataloader:
-			# ... your Scikit-learn training code ...
-			pass
+		for batch in self.dataloader.get_dataset():
+			features, labels = batch["features"], batch["labels"]

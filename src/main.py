@@ -29,6 +29,7 @@ def main(argv) -> None:
 	gin.parse_config_files_and_bindings(config_file, [])
 
 	runner = Runner()
+	runner.train()
 
 	return
 
