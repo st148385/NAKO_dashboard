@@ -12,22 +12,6 @@ utils.reading module
    :undoc-members:
    :show-inheritance:
 
-utils.utils module
-------------------
-
-.. automodule:: utils.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-utils.utils\_gin module
------------------------
-
-.. automodule:: utils.utils_gin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 utils.utils\_misc module
 ------------------------
 

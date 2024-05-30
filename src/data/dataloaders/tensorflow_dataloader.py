@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import gin
 import polars as pl
 import tensorflow as tf
@@ -8,14 +10,55 @@ from .base_dataloader import BaseDataLoader
 
 @gin.configurable
 class TensorflowDataloader(BaseDataLoader):
-	"""DataLoader for TensorFlow models."""
+	"""
+	Data loader designed for TensorFlow models.
+
+	This class extends :class:`BaseDataLoader` and is tailored for preparing data
+	specifically for TensorFlow models. It handles the removal of non-numeric
+	columns, splitting of the data into training and validation sets, and
+	batching for efficient TensorFlow training.
+
+	:param data: The input DataFrame containing features and labels.
+	:type data: pl.DataFrame
+	:param target_feature: The name of the column in the DataFrame that represents the target variable.
+	:type target_feature: str
+	:param val_split: The proportion of data to be used for validation (default: 0.2).
+	:type val_split: float
+	:param batch_size: The size of each batch of data (default: 32).
+	:type batch_size: int
+	:param shuffle: Whether to shuffle the data before splitting (default: True).
+	:type shuffle: bool
+	:param seed: The random seed for reproducibility (default: None).
+	:type seed: int
+
+	"""
 
 	def __init__(self, **kwargs):
+		"""
+		Initializes the ``TensorflowDataloader``.
+
+		:param \**kwargs: Additional keyword arguments that can be passed to the parent class (``BaseDataLoader``)
+						or used to configure specific parameters of this class.
+
+		"""
 		super().__init__(**kwargs)
 
-	def get_datasets(self) -> tf.data.Dataset:
-		# TODO might handle differently
-		# Identify and remove string (object) columns
+	def get_datasets(self) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+		"""
+		Prepares and returns batched TensorFlow datasets for training and validation.
+
+		This method performs the following steps:
+
+		1. Filters out non-numeric columns from the input DataFrame.
+		2. Splits the data into training and validation sets using ``train_test_split``.
+		3. Creates TensorFlow ``Dataset`` objects for both the training and validation sets.
+		4. Batches the datasets according to the specified ``batch_size``.
+
+		:return: A tuple containing the training and validation ``tf.data.Dataset`` objects.
+		:rtype: Tuple[tf.data.Dataset, tf.data.Dataset]
+
+		"""
+		# Filter out non-numeric columns
 		numeric_data = self.data.select(pl.exclude(pl.datatypes.Utf8))
 
 		features_full = numeric_data.drop(self.target_feature).to_numpy().astype("float32")

@@ -1,31 +1,40 @@
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict
 
 import gin
+import polars as pl
 from transformations import TRANSFORMS, TRANSFORMS_DICT
 from utils.reading import read_data_with_polars
 
 
 @gin.configurable
 class AbstractWorkflow(ABC):
-	"""Abstract base class for processing data using Polars.
+	"""
+	Abstract base class for data processing workflows using Polars.
 
-	This class defines the structure of a data processing workflow. It outlines
-	three main stages: preprocessing, processing, and postprocessing. Subclasses
-	must implement concrete methods for each of these stages to tailor the
-	workflow to specific datasets and tasks.
+	This class establishes the fundamental structure for a data processing workflow,
+	consisting of three primary stages:
 
-	:param file_path: The path to the data file.
-	:type file_path: Path
+	1. **Preprocessing:** Cleaning, transforming, and preparing the raw data.
+	2. **Processing:** Executing the core logic of the workflow (e.g., model training).
+	3. **Postprocessing:**  Finalizing results or preparing data for output.
 
-	.. note::
-		Subclasses must implement the ``preprocess``, ``process``, and
-		``postprocess`` methods.
+	Subclasses are expected to implement concrete methods for each of these stages,
+	customizing them to suit specific datasets and tasks.
 
-	.. warning::
+	**Note:**
+		Subclasses must implement the ``preprocess``, ``process``, and ``postprocess`` methods.
+
+	**Warning:**
 		This class cannot be instantiated directly.
+
+	:param data_paths: A dictionary mapping data types to file paths. Must include keys "metadata_path" and "data_path".
+	:type data_paths: Dict[str, str]
+	:param preprocess_basis: A dictionary specifying preprocessing operations for each feature.
+	:type preprocess_basis: Dict[str, str], optional
+
 	"""
 
 	def __init__(
@@ -33,43 +42,55 @@ class AbstractWorkflow(ABC):
 		data_paths: Dict[str, str],
 		preprocess_basis: Dict[str, str] = None,
 	):
-		"""_summary_
-
-		:param data_paths: _description_
-		:type data_paths: Dict[str, str]
 		"""
+		Initializes the abstract workflow.
 
+		:param data_paths: A dictionary mapping data types to file paths.
+		:type data_paths: Dict[str, str]
+		:param preprocess_basis: A dictionary specifying preprocessing operations for each feature.
+		:type preprocess_basis: Dict[str, str], optional
+		:raises KeyError: If required data paths ("metadata_path" or "data_path") are missing.
+		:raises FileNotFoundError: If any specified data file is not found.
+
+		"""
 		self._validate_paths(data_paths)
 		self.data_paths = data_paths
+		self._preprocess_basis = preprocess_basis
 
-		# TODO might outsource to the subclasses...
-		# Read metadata and actual data
+		# Load metadata and main data
 		self.metadata = read_data_with_polars(
 			data_paths.pop("metadata_path"),
 			separator=";",
 			encoding="latin1",
-			infer_schema_length=0,  # TODO this might resolve for new version of data
+			infer_schema_length=0,
 			truncate_ragged_lines=True,
 		)
 		self.data = read_data_with_polars(data_paths.pop("data_path"), separator=";", encoding="latin1")
+
 		# Merge additional data (if any)
 		for data_name, data_path in data_paths.items():
 			logging.info(f"Merging '{data_name}' data...")
 			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
-			self.data = self.data.join(additional_data, on="ID", how="left")
+			self.data = self.data.join(additional_data, on="ID", how="left")  # Assuming "ID" is the join key
 
-		# Dict holding operations for each feature. See base config for this.
-		self._preprocess_basis = preprocess_basis
-
-	# TODO might reduce to only one process...
 	@abstractmethod
-	def preprocess(self, data):
-		"""Preprocesses the raw data from the CSV file."""
+	def preprocess(self, data: pl.DataFrame) -> pl.DataFrame:
+		"""
+		Preprocesses the raw data.
 
-		# General preprocessing.
-		# Defining all operations for a given feature inside of the config file
-		# e.g. {"basis_age": [%TRANSFORMS.MIN_MAX_NORM, %TRANSFORMS.DROP]}
-		# will min max scale basis_age and drop it afterwards (does not make sense, just as example :D)
+		This method defines a general preprocessing strategy applied to all datasets.
+		It iterates over features and transformations specified in the `preprocess_basis` dictionary,
+		applying transformations from the `TRANSFORMS` enum to each column as needed. It also logs and
+		drops features not explicitly listed in the `preprocess_basis`.
+
+		:param data: The raw data to preprocess.
+		:type data: pl.DataFrame
+		:return: The preprocessed data.
+		:rtype: pl.DataFrame
+		:raises ValueError: If an invalid transformation is specified for a column.
+
+		"""
+
 		not_listed_features = data.columns
 		for column, transform_list in self._preprocess_basis.items():  # Now using enum values
 			if column in not_listed_features:
@@ -92,19 +113,42 @@ class AbstractWorkflow(ABC):
 		return data
 
 	@abstractmethod
-	def process(self, data):
-		"""Performs the core processing logic on the data."""
-		return data
+	def process(self, data: pl.DataFrame) -> Any:
+		"""
+		Performs the core processing logic on the preprocessed data.
+
+		This method should be implemented by subclasses to execute the main steps
+		of the workflow (e.g., model training, data analysis).
+
+		:param data: The preprocessed data.
+		:type data: pl.DataFrame
+		:return: The result of the processing step. The type depends on the specific workflow.
+		:rtype: Any
+
+		"""
+		pass
 
 	@abstractmethod
-	def postprocess(self, data):
-		"""Applies any post-processing steps to the processed data."""
-		return data
+	def postprocess(self, data: Any) -> Any:
+		"""
+		Applies postprocessing steps to the processed data.
+
+		This method should be implemented by subclasses to finalize the results,
+		prepare the data for output, or perform any other necessary postprocessing.
+
+		:param data: The processed data.
+		:type data: Any
+		:return: The postprocessed data. The type depends on the specific workflow.
+		:rtype: Any
+
+		"""
+		pass
 
 	def run(self):
 		"""Executes the entire workflow."""
-
+		print(self.data)
 		self.data = self.preprocess(self.data)
+		print(self.data)
 		self.data = self.process(self.data)
 		self.data = self.postprocess(self.data)
 
