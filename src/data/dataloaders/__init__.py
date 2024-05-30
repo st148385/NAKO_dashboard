@@ -1,1 +1,3 @@
-from .dataloaders import ScikitLearnDataloader, TensorflowDataloader
+from .dataloader_factory import DataLoaderFactory
+from .scikitlearn_dataloader import ScikitLearnDataloader
+from .tensorflow_dataloader import TensorflowDataloader

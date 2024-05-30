@@ -1,10 +1,6 @@
 include "configs/__base__/30k_metadata_base_config.gin"
 
 
-# Specify the Runner specific stuff
-Runner.workflow = @Metadata30kWorkflow()
-Runner.dataloader = @TensorflowDataloader()
-# Afterwards you specify the specific Init arguments for the
-# classes used inside the Runner
 
-ScikitLearnDataloader.scaler = 2
+DataLoaderFactory.dataloader_name = "TensorflowDataloader"
+ModelFactory.model_name = "DummyModelTensorflow"

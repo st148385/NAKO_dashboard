@@ -1,23 +1,19 @@
 from typing import Union
 
 import gin
-from data.dataloaders.dataloaders import ScikitLearnDataloader, TensorflowDataloader
-from data.workflows import Diabetes13kWorkflow, Metadata30kWorkflow
+from data.dataloaders import ScikitLearnDataloader, TensorflowDataloader
 
 
 @gin.configurable
 class Runner:
 	def __init__(
 		self,
-		dataloader: Union[ScikitLearnDataloader, TensorflowDataloader],
-		workflow: Union[Diabetes13kWorkflow, Metadata30kWorkflow],
+		model,
+		train_ds,
+		val_ds,
+		run_paths,
 	):
-		# Init workflow with gin specified config
-		self.workflow = workflow
-		data = self.workflow.run()
-		# Workaround using "load" since init and providing data is nested in current setup
-		self.dataloader = dataloader
-		self.dataloader.load(data)
+		pass
 
 	def run(self):
 		# Preprocess data
