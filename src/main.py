@@ -7,7 +7,7 @@ from data.dataloaders import DataLoaderFactory
 from data.workflows import WorkflowFactory
 from models import ModelFactory
 from training import Runner
-from utils import utils_misc, utils_params
+from utils import utils_misc, utils_params, utils_register_gin
 
 # Define different arguments for the main
 # e.g. WANDB API KEY...
