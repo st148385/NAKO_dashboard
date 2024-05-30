@@ -6,21 +6,12 @@ from data.dataloaders import ScikitLearnDataloader, TensorflowDataloader
 
 @gin.configurable
 class Runner:
-	def __init__(
-		self,
-		model,
-		train_ds,
-		val_ds,
-		run_paths,
-	):
-		pass
+	def __init__(self, model, dataloader):
+		self.model = model
+		self.dataloader = dataloader
+		self.train_ds, self.val_ds = dataloader.get_datasets()
 
 	def run(self):
-		# Preprocess data
-		data = self.workflow.run()
-
-		# Create a dataloader
-		self.dataloader(data)
 		self.train()
 
 	def train(self):
@@ -34,10 +25,10 @@ class Runner:
 
 	def _train_tensorflow(self):
 		# TensorFlow-specific training logic using tensors from self.dataloader
-		for batch in self.dataloader.get_dataset():
+		for batch in self.train_ds:
 			features, labels = batch["features"], batch["labels"]
 
 	def _train_scikitlearn(self):
 		# Scikit-learn training logic using NumPy arrays from self.dataloader
-		for batch in self.dataloader.get_dataset():
+		for batch in self.train_ds:
 			features, labels = batch["features"], batch["labels"]

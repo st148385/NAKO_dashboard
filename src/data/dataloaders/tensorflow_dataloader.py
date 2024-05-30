@@ -13,7 +13,7 @@ class TensorflowDataloader(BaseDataLoader):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 
-	def get_dataset(self) -> tf.data.Dataset:
+	def get_datasets(self) -> tf.data.Dataset:
 		# TODO might handle differently
 		# Identify and remove string (object) columns
 		numeric_data = self.data.select(pl.exclude(pl.datatypes.Utf8))

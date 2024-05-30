@@ -32,28 +32,23 @@ def main(argv) -> None:
 	gin.parse_config_files_and_bindings(config_file, [])
 
 	# Create Workflow. Preprocess data
-	workflow = WorkflowFactory()
-	data = workflow.run()
+	workflow_factory = WorkflowFactory()
+	data = workflow_factory.run()
 
 	# Create DataLoader, Process data to correct format
-	dataloader = DataLoaderFactory(data=data)
-	train_ds, val_ds = dataloader.get_dataset()
+	dataloader_factory = DataLoaderFactory(data=data)
+	dataloader = dataloader_factory.dataloader
+	train_ds, _ = dataloader.get_datasets()
 
 	# Load model with correct shapes
 	for batch in train_ds:
 		input_shape = batch["features"].shape[1:]
 		output_shape = batch["labels"].shape[1:]
 		break
-
 	wrapper_model = ModelFactory(input_shape=input_shape, output_shape=output_shape)
 
-	# Plug everything into runner
-
-	# runner = Runner(model=model, dataloader=dataloader)
-
-	# get_model(input_shape=16, output_shape=2)
-
-	runner = Runner()
+	# Init runner with dataloader and model.
+	runner = Runner(model=wrapper_model.model, dataloader=dataloader)
 	runner.train()
 
 	return

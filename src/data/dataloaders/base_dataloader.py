@@ -33,7 +33,7 @@ class BaseDataLoader(ABC):
 		# Add any other validation checks you need here
 
 	@abstractmethod
-	def get_dataset(self) -> Generator[Dict[str, any], None, None]:
+	def get_datasets(self) -> Generator[Dict[str, any], None, None]:
 		"""Abstract method to be implemented by subclasses.
 		Yields batches of data in the appropriate format for the ML framework.
 		"""

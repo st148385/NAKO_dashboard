@@ -14,7 +14,7 @@ class ScikitLearnDataloader(BaseDataLoader):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 
-	def get_dataset(self) -> Generator[Dict[str, npt.NDArray], None, None]:
+	def get_datasets(self) -> Generator[Dict[str, npt.NDArray], None, None]:
 		X = self.data.drop(self.target_feature).to_numpy()
 		y = self.data[self.target_feature].to_numpy()
 

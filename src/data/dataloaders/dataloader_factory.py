@@ -30,6 +30,6 @@ class DataLoaderFactory:
 		"""Loads data into the dataloader."""
 		self.dataloader.load(data)
 
-	def get_dataset(self):
+	def get_datasets(self):
 		"""Retrieves the dataset from the dataloader."""
 		return self.dataloader.get_dataset()
