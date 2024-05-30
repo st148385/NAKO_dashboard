@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict
 
 import gin
+from transformations import TRANSFORMS, TRANSFORMS_DICT
 from utils.reading import read_data_with_polars
 
 
@@ -30,7 +31,7 @@ class AbstractWorkflow(ABC):
 	def __init__(
 		self,
 		data_paths: Dict[str, str],
-		feature_selection: Dict[str, str] = None,
+		preprocess_basis: Dict[str, str] = None,
 	):
 		"""_summary_
 
@@ -57,33 +58,57 @@ class AbstractWorkflow(ABC):
 			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
 			self.data = self.data.join(additional_data, on="ID", how="left")
 
-		self.feature_selection = feature_selection
+		# Dict holding operations for each feature. See base config for this.
+		self._preprocess_basis = preprocess_basis
 
 	# TODO might reduce to only one process...
 	@abstractmethod
 	def preprocess(self, data):
 		"""Preprocesses the raw data from the CSV file."""
-		pass
+
+		# General preprocessing.
+		# Defining all operations for a given feature inside of the config file
+		# e.g. {"basis_age": [%TRANSFORMS.MIN_MAX_NORM, %TRANSFORMS.DROP]}
+		# will min max scale basis_age and drop it afterwards (does not make sense, just as example :D)
+		not_listed_features = data.columns
+		for column, transform_list in self._preprocess_basis.items():  # Now using enum values
+			if column in not_listed_features:
+				not_listed_features.remove(column)
+			if not isinstance(transform_list, list):
+				transform_list = [transform_list]
+			if transform_list[0] is None:
+				continue
+			elif set(transform_list).issubset(set(TRANSFORMS)):  # Check if it's a valid enum value
+				for transform_enum in transform_list:
+					transform_func = TRANSFORMS_DICT[transform_enum]
+					data = transform_func(data, column)
+			else:
+				raise ValueError(f"Invalid transformation for column '{column}': {transform_enum}")
+
+		# drop features which have not been mentioned explicitly
+		if not_listed_features:
+			logging.warn(f"Dropping not explicilty listed features from data: {not_listed_features}")
+		data = data.drop(not_listed_features)
+		return data
 
 	@abstractmethod
 	def process(self, data):
 		"""Performs the core processing logic on the data."""
-		pass
+		return data
 
 	@abstractmethod
 	def postprocess(self, data):
 		"""Applies any post-processing steps to the processed data."""
-		pass
+		return data
 
 	def run(self):
 		"""Executes the entire workflow."""
-		data = read_data_with_polars(self.data_paths)
 
-		data = self.preprocess(data)
-		data = self.process(data)
-		data = self.postprocess(data)
+		self.data = self.preprocess(self.data)
+		self.data = self.process(self.data)
+		self.data = self.postprocess(self.data)
 
-		return data
+		return self.data
 
 	@staticmethod
 	def _validate_paths(data_paths: Dict[str, str]) -> None:

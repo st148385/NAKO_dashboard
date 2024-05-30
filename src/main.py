@@ -3,6 +3,9 @@ from pathlib import Path
 
 import gin
 from absl import app, flags
+from data.dataloaders import DataLoaderFactory
+from data.workflows import WorkflowFactory
+from models import ModelFactory
 from training import Runner
 from utils import utils_misc, utils_params
 
@@ -28,7 +31,25 @@ def main(argv) -> None:
 	config_file = [Path("configs") / FLAGS.config_file]
 	gin.parse_config_files_and_bindings(config_file, [])
 
-	runner = Runner()
+	# Create Workflow. Preprocess data
+	workflow_factory = WorkflowFactory()
+	data = workflow_factory.run()
+
+	# Create DataLoader, Process data to correct format
+	dataloader_factory = DataLoaderFactory(data=data)
+	dataloader = dataloader_factory.dataloader
+	train_ds, _ = dataloader.get_datasets()
+
+	# Load model with correct shapes
+	for batch in train_ds:
+		input_shape = batch["features"].shape[1:]
+		output_shape = batch["labels"].shape[1:]
+		break
+	wrapper_model = ModelFactory(input_shape=input_shape, output_shape=output_shape)
+
+	# Init runner with dataloader and model.
+	runner = Runner(model=wrapper_model.model, dataloader=dataloader)
+	runner.train()
 
 	return
 
