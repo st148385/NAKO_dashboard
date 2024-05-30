@@ -1,6 +1,12 @@
 include "configs/__base__/30k_metadata_base_config.gin"
 
 
+
+
+####################################################
+#       Workflow/Preprocessing specific stuff      #
+####################################################
+
 # Specify Workflow/Preprocess Configuration
 WorkflowFactory.preprocess_basis = {
     "basis_age": None,
@@ -8,10 +14,22 @@ WorkflowFactory.preprocess_basis = {
     "BD02": None,
 }
 
+
+####################################################
+#            Dataloader specific stuff             #
+####################################################
+
+
 # Specify the Dataloader Configuration
 DataLoaderFactory.dataloader_name = "TensorflowDataloader"
 DataLoaderFactory.target_feature = "basis_sex"
 
+
+
+
+####################################################
+#            Model and Train specific              #
+####################################################
 
 # Specify the model Configuration
 ModelFactory.model_name = "DummyModelTensorflow"
@@ -35,7 +53,11 @@ val_acc/sparse_categorical_accuracy_metric.name = "val_acc"
 
 
 
-# Assign everything to Runner
+
+####################################################
+#                Assign to Runner                  #
+####################################################
+
 Runner.train_loss = @train_loss/mean_metric()
 Runner.train_acc = @train_acc/sparse_categorical_accuracy_metric()
 Runner.val_loss = @val_loss/mean_metric()
