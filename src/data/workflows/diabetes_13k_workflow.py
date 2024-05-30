@@ -9,7 +9,11 @@ class Diabetes13kWorkflow(AbstractWorkflow):
 		super().__init__(**kwargs)
 
 	def preprocess(self, data):
-		return super().preprocess(data)
+		# General preprocessing
+		data = super().preprocess(data)
+
+		# Dataset specific preprocessing.
+		return data
 
 	def process(self, data):
 		return super().process(data)

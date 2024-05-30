@@ -31,7 +31,7 @@ class AbstractWorkflow(ABC):
 	def __init__(
 		self,
 		data_paths: Dict[str, str],
-		feature_selection: Dict[str, str] = None,
+		preprocess_basis: Dict[str, str] = None,
 	):
 		"""_summary_
 
@@ -58,16 +58,20 @@ class AbstractWorkflow(ABC):
 			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
 			self.data = self.data.join(additional_data, on="ID", how="left")
 
-		self.feature_selection = feature_selection
+		# Dict holding operations for each feature. See base config for this.
+		self._preprocess_basis = preprocess_basis
 
 	# TODO might reduce to only one process...
 	@abstractmethod
 	def preprocess(self, data):
 		"""Preprocesses the raw data from the CSV file."""
 
+		# General preprocessing.
+		# Defining all operations for a given feature inside of the config file
+		# e.g. {"basis_age": [%TRANSFORMS.MIN_MAX_NORM, %TRANSFORMS.DROP]}
+		# will min max scale basis_age and drop it afterwards (does not make sense, just as example :D)
 		not_listed_features = data.columns
-
-		for column, transform_list in self.feature_selection.items():  # Now using enum values
+		for column, transform_list in self._preprocess_basis.items():  # Now using enum values
 			if column in not_listed_features:
 				not_listed_features.remove(column)
 			if not isinstance(transform_list, list):
