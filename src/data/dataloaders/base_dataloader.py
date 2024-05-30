@@ -54,6 +54,13 @@ class BaseDataLoader(ABC):
 		:type shuffle: bool
 		:param seed: The random seed for reproducibility (default: 42).
 		:type seed: int
+
+
+		.. note::
+		Subclasses must implement the ``get_datasets`` method.
+
+		.. warning::
+			This class cannot be instantiated directly.
 		"""
 
 		self.target_feature = target_feature

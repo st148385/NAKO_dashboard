@@ -28,6 +28,14 @@ data.workflows.metadata\_30k\_workflow module
    :undoc-members:
    :show-inheritance:
 
+data.workflows.workflowfactory module
+-------------------------------------
+
+.. automodule:: data.workflows.workflowfactory
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

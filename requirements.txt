@@ -1,9 +1,8 @@
     pre-commit
     numpy
-    pandas
+    polars
     matplotlib
     sphinx
     sphinx-rtd-theme
-    streamlit
     seaborn
-    statsmodels
+    tensorflow

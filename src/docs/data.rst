@@ -7,18 +7,8 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   data.dataloaders
    data.workflows
-
-Submodules
-----------
-
-data.dataloders module
-----------------------
-
-.. automodule:: data.dataloders
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Module contents
 ---------------
