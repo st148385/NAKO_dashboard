@@ -1,6 +1,6 @@
 include "configs/__base__/30k_metadata_base_config.gin"
 
-
+# -----------------------------------------------------------------------
 
 
 ####################################################
@@ -13,24 +13,21 @@ WorkflowFactory.preprocess_basis = {
     "basis_sex": None,
     "BD02": None,
 }
-
+# -----------------------------------------------------------------------
 
 ####################################################
 #            Dataloader specific stuff             #
 ####################################################
-
-
 # Specify the Dataloader Configuration
 DataLoaderFactory.dataloader_name = "TensorflowDataloader"
 DataLoaderFactory.target_feature = "basis_sex"
 
 
-
+# -----------------------------------------------------------------------
 
 ####################################################
 #            Model and Train specific              #
 ####################################################
-
 # Specify the model Configuration
 ModelFactory.model_name = "DummyModelTensorflow"
 
@@ -42,7 +39,6 @@ loss/sparse_categorical_loss.from_logits = False
 # OPTIMIZER
 optimizer/adam_optimizer.learning_rate = 0.02
 
-
 # Track metrics/loss
 # -- train -- #
 train_loss/mean_metric.name = "train_loss"
@@ -52,12 +48,11 @@ val_loss/mean_metric.name = "val_loss"
 val_acc/sparse_categorical_accuracy_metric.name = "val_acc"
 
 
-
+# -----------------------------------------------------------------------
 
 ####################################################
 #                Assign to Runner                  #
 ####################################################
-
 Runner.train_loss = @train_loss/mean_metric()
 Runner.train_acc = @train_acc/sparse_categorical_accuracy_metric()
 Runner.val_loss = @val_loss/mean_metric()

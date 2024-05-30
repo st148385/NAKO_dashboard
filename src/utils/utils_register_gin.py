@@ -126,9 +126,3 @@ def sparse_categorical_accuracy_metric(
 
 	metric = tf.keras.metrics.SparseCategoricalAccuracy(name=name, dtype=dtype)
 	return metric
-
-
-@gin.configurable
-def create_metric(metric_class, name):
-	"""Factory function to create a metric with a specific name."""
-	return metric_class(name=name)
