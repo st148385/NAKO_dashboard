@@ -94,12 +94,12 @@ class AbstractWorkflow(ABC):
 	@abstractmethod
 	def process(self, data):
 		"""Performs the core processing logic on the data."""
-		pass
+		return data
 
 	@abstractmethod
 	def postprocess(self, data):
 		"""Applies any post-processing steps to the processed data."""
-		pass
+		return data
 
 	def run(self):
 		"""Executes the entire workflow."""

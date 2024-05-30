@@ -1,102 +1,86 @@
 import logging
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Dict
+from typing import Dict, Generator
 
 import gin
+import numpy as np  # For NumPy arrays (scikit-learn)
 import polars as pl
+import tensorflow as tf  # For TensorFlow-specific data types
 
 
 @gin.configurable
 class BaseDataLoader(ABC):
-	"""Base class for data loading.
+	"""Base class for data loading and preprocessing."""
 
-	Handles loading, merging, and basic validation of data from CSV files.
-
-	Subclasses should implement the `transform` method to tailor data preparation
-	for specific ML frameworks (e.g., TensorFlow, scikit-learn).
-
-	Configuration (GIN):
-
-	- **data_paths (dict):**
-		- ``metadata_path`` (str): Path to the metadata CSV file.
-		- ``data_path`` (str): Path to the main data CSV file.
-		- Additional keys (optional): Paths to other datasets to be merged, named as you prefer.
-	- **target_feature (str):** The name of the feature to be predicted.
-	"""
-
-	def __init__(self, data_paths: Dict[str, str], target_feature: str):
+	def __init__(self, target_feature: str, batch_size: int):
 		self.target_feature = target_feature
-		self._validate_paths(data_paths)
+		self.batch_size = batch_size
+		self.data = None
 
-		# self._validate_target_feature(self.data, self.target_feature)
+	def _validate_data(self):
+		"""Basic validation of data."""
+		if self.target_feature not in self.data.columns:
+			raise KeyError(f"Target feature '{self.target_feature}' not in data.")
 
-	@staticmethod
-	def _validate_paths(data_paths: Dict[str, str]) -> None:
-		"""Validates that the required paths exist and are files."""
-		for data_type, path in data_paths.items():
-			path = Path(path)
-			if not path.is_file():
-				raise FileNotFoundError(f"{data_type} not found at {path}")
+		# Add any other validation checks you need here
 
-	@staticmethod
-	def _validate_target_feature(data: pl.DataFrame, feature: str) -> None:
-		"""Check if the target_feature is even included in data."""
-		if feature not in data.columns:
-			raise KeyError(f"Target feature: {feature} not included in data")
+	def load(
+		self,
+		data: pl.DataFrame,
+	):
+		"""Helper function resulting from the GIN setup i use."""
+		assert isinstance(data, pl.DataFrame), "Data must be polars DataFrame"
+		self.data = data
 
 	@abstractmethod
-	def transform(self):
-		"""Transforms the data into the desired format.
-
-		This method is abstract and must be implemented by subclasses.
+	def get_dataset(self) -> Generator[Dict[str, any], None, None]:
+		"""Abstract method to be implemented by subclasses.
+		Yields batches of data in the appropriate format for the ML framework.
 		"""
-		pass
+		assert self.data is not None, "Data has not been loaded. First use dataloader.load(data)."
 
 
 @gin.configurable
 class TensorflowDataloader(BaseDataLoader):
-	"""Data Loader for TensorFlow models."""
+	"""DataLoader for TensorFlow models."""
 
-	def __init__(self, batch_size: int, **kwargs):
-		"""Initializes the TensorFlowLoader.
-
-		Since `TensorFlowLoader` extends `BaseDataLoader`,
-		it inherits its configuration parameters.
-
-		:param data_paths: (Inherited) Dictionary containing paths to the data files.
-		:param target_feature: (Inherited) Name of the target feature.
-		"""
+	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 
-		# TODO ONLY EXAMPLE
-		self.batch_size = batch_size
+	def get_dataset(self) -> tf.data.Dataset:
+		super().get_dataset()
 
-	def transform(self):
-		"""Transforms the data into TensorFlow tensors."""
-		logging.info("Transforming data for TensorFlow...")
-		# ... your TensorFlow-specific code here ...
+		# Identify and remove string (object) columns
+		numeric_data = self.data.select(pl.exclude(pl.datatypes.Utf8))
+
+		tf_dataset = tf.data.Dataset.from_tensor_slices(
+			{
+				"features": numeric_data.drop(self.target_feature).to_numpy().astype("float32"),
+				"labels": numeric_data[self.target_feature].to_numpy().astype("float32"),  # Assuming regression
+			}
+		)
+
+		tf_dataset = tf_dataset.batch(self.batch_size)
+
+		# Optionally add more dataset transformations (shuffle, prefetch, etc.)
+		return tf_dataset
 
 
 @gin.configurable
 class ScikitLearnDataloader(BaseDataLoader):
-	"""Data loader for scikit-learn models."""
+	"""DataLoader for scikit-learn models."""
 
 	def __init__(self, scaler, **kwargs):
-		"""Initializes the ScikitLearnDataloader.
-
-		Since `ScikitLearnLoader` extends `BaseDataLoader`,
-		it inherits its configuration parameters.
-
-		:param data_paths: (Inherited) Dictionary containing paths to the data files.
-		:param target_feature: (Inherited) Name of the target feature.
-		"""
 		super().__init__(**kwargs)
 
-		# TODO this is only an example
-		self.scaler = scaler
+	def get_dataset(self) -> Generator[Dict[str, np.ndarray], None, None]:
+		super().get_dataset()
+		X = self.data.drop(self.target_feature).to_numpy()
+		y = self.data[self.target_feature].to_numpy()
 
-	def transform(self):
-		"""Transforms the data into NumPy arrays suitable for scikit-learn."""
-		logging.info("Transforming data for scikit-learn...")
-		# ... your scikit-learn specific code here ...
+		batches = []
+		for i in range(0, len(X), self.batch_size):
+			batch = {"features": X[i : i + self.batch_size], "labels": y[i : i + self.batch_size]}
+			batches.append(batch)
+
+		return batches

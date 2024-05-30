@@ -13,9 +13,9 @@ Metadata30kWorkflow.data_paths = {
     }
 
 Metadata30kWorkflow.preprocess_basis = {
-    '0': %TRANSFORMS.DROP,
-    '0_right': [%TRANSFORMS.MIN_MAX_NORM, %TRANSFORMS.DROP],
-    '1': %TRANSFORMS.DROP,
+    '0': None,
+    '0_right': None,
+    '1': None,
     '1_right': None,
     '2': None,
     '2_right': None,
@@ -341,16 +341,7 @@ Metadata30kWorkflow.preprocess_basis = {
 ##################
 
 
-
 # BaseDataLoader settings
 # TODO data_paths probably will be removed since the workflow is reading the data already.
-BaseDataLoader.data_paths= {
-    "metadata_path": "/home/artur/Desktop/FA/data/NAKO_tabular/30k_metadata/NAKO-536_2023-07-13_Erstuntersuchung_MRT_PSN_wie_194_Metadaten.csv",
-    "data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/30k_metadata/NAKO-536_2023-07-13_Erstuntersuchung_MRT_PSN_wie_194.csv",
-    "Fat_fraction_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/Fat_Fractions.csv",
-    "CSA_GluPso_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/CSA_GluPso_real.csv",
-    "CSA_Thigh_real_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/CSA_Thigh_real.csv",
-    "Volumes_GluPso_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/volumes_GluPso_real.csv",
-    "Volumes_Thigh_real_data_path": "/home/artur/Desktop/FA/data/NAKO_tabular/MRI_Vol_CSA_FF/volumes_Thigh_real.csv",
-    }
+BaseDataLoader.batch_size = 32
 BaseDataLoader.target_feature = "basis_age"
