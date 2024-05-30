@@ -48,7 +48,7 @@ def main(argv) -> None:
 	wrapper_model = ModelFactory(input_shape=input_shape, output_shape=output_shape)
 
 	# Init runner with dataloader and model.
-	runner = Runner(model=wrapper_model.model, dataloader=dataloader)
+	runner = Runner(model=wrapper_model.model, dataloader=dataloader, run_paths=run_paths)
 	runner.train()
 
 	return

@@ -84,3 +84,51 @@ def adam_optimizer(
 		**kwargs,  # Additional keyword arguments
 	)
 	return optimizer
+
+
+@gin.configurable
+def mean_metric(name: str = "mean", dtype=None) -> tf.keras.metrics.Mean:
+	"""Creates and returns a Mean metric for Keras/TensorFlow.
+
+	This function serves as a Gin-configurable wrapper for the `tf.keras.metrics.Mean` metric.
+	It allows you to conveniently set the parameters of the metric through your Gin configuration files.
+
+	:param name: String name of the metric instance.
+	:type name: str
+	:param dtype: Data type of the metric result. Defaults to the data type of the input values if None is given.
+	:type dtype: tf.DType, optional
+	:return: An instance of ``tf.keras.metrics.Mean``.
+	:rtype: tf.keras.metrics.Mean
+	"""
+
+	metric = tf.keras.metrics.Mean(name=name, dtype=dtype)
+	return metric
+
+
+@gin.configurable
+def sparse_categorical_accuracy_metric(
+	name: str = "sparse_categorical_accuracy",
+	dtype=None,
+) -> tf.keras.metrics.SparseCategoricalAccuracy:
+	"""
+	Creates and returns a SparseCategoricalAccuracy metric for Keras/TensorFlow.
+
+	This function serves as a Gin-configurable wrapper for the `tf.keras.metrics.SparseCategoricalAccuracy` metric.
+	It allows you to conveniently set the parameters of the metric through your Gin configuration files.
+
+	:param name: String name of the metric instance.
+	:type name: str
+	:param dtype: Data type of the metric result. Defaults to the data type of the input values if None is given.
+	:type dtype: tf.DType, optional
+	:return: An instance of ``tf.keras.metrics.SparseCategoricalAccuracy``.
+	:rtype: tf.keras.metrics.SparseCategoricalAccuracy
+	"""
+
+	metric = tf.keras.metrics.SparseCategoricalAccuracy(name=name, dtype=dtype)
+	return metric
+
+
+@gin.configurable
+def create_metric(metric_class, name):
+	"""Factory function to create a metric with a specific name."""
+	return metric_class(name=name)

@@ -18,6 +18,8 @@ ModelFactory.model_name = "DummyModelTensorflow"
 
 # Specify Custom modules and give to Runner
 sparse_categorical_loss.name = "SparseCategoricalLoss"
+sparse_categorical_loss.from_logits = False
 adam_optimizer.learning_rate = 0.02
-Runner.loss = @sparse_categorical_loss(from_logits=False)
+Runner.loss = @sparse_categorical_loss()
 Runner.optimizer = @adam_optimizer()
+Runner.num_epochs = 10

@@ -1,20 +1,39 @@
-from typing import Union
+from typing import Dict, Union
 
 import gin
+import sklearn
 import tensorflow as tf
 from data.dataloaders import ScikitLearnDataloader, TensorflowDataloader
 
 
 @gin.configurable
 class Runner:
-	def __init__(self, model, dataloader, num_epochs: int = 10, **kwargs):
+	def __init__(
+		self,
+		model: Union[tf.keras.Model, sklearn.base.BaseEstimator],
+		dataloader: Union[ScikitLearnDataloader, TensorflowDataloader],
+		run_paths: Dict[str, str],
+		num_epochs: int = 10,
+		**kwargs,
+	):
 		self.model = model
 		self.dataloader = dataloader
 		self.train_ds, self.val_ds = dataloader.get_datasets()
+		self.run_paths = run_paths
+
+		# ------------------ GIN CONFIGURABLES --------------- #
+
+		self.num_epochs = num_epochs
 
 		# Extract kwargs Tensorflow specific
+		# Train stuff
 		self.loss_obj = kwargs.get("loss")
 		self.optimizer = kwargs.get("optimizer")
+		self.train_loss = kwargs.get("train_loss")
+		self.train_accuracy = kwargs.get("train_acc")
+		# Val stuff
+		self.val_loss = kwargs.get("val_loss")
+		self.val_accuracy = kwargs.get("val_acc")
 
 		# Extract kwargs SciKitLearn Specific
 

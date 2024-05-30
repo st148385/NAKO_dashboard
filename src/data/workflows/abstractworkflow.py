@@ -146,9 +146,7 @@ class AbstractWorkflow(ABC):
 
 	def run(self):
 		"""Executes the entire workflow."""
-		print(self.data)
 		self.data = self.preprocess(self.data)
-		print(self.data)
 		self.data = self.process(self.data)
 		self.data = self.postprocess(self.data)
 

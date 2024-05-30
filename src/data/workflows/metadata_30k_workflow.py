@@ -38,7 +38,6 @@ class Metadata30kWorkflow(AbstractWorkflow):
 
 		# General preprocessing
 		data = super().preprocess(data)
-		print(data)
 
 		# TODO: Add dataset-specific preprocessing steps here.
 
