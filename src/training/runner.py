@@ -24,11 +24,11 @@ class Runner:
 			raise ValueError("Unsupported DataLoader type")
 
 	def _train_tensorflow(self):
-		# TensorFlow-specific training logic using tensors from self.dataloader
+		# TensorFlow-specific training logic
 		for batch in self.train_ds:
 			features, labels = batch["features"], batch["labels"]
 
 	def _train_scikitlearn(self):
-		# Scikit-learn training logic using NumPy arrays from self.dataloader
+		# Scikit-learn training logic
 		for batch in self.train_ds:
 			features, labels = batch["features"], batch["labels"]
