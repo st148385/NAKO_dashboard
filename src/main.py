@@ -43,7 +43,7 @@ def main(argv) -> None:
 
 	# Init runner with dataloader and model.
 	runner = Runner(model=model_factory.model, dataloader=dataloader, run_paths=run_paths)
-	runner.train()
+	runner.run()
 
 	return
 

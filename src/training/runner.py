@@ -50,6 +50,10 @@ class Runner:
 		# Extract kwargs SciKitLearn Specific
 
 	def run(self):
+		# Log Dataset info
+		self._log_beautiful_dict(self.ds_info, "Dataset Information")
+
+		# Log
 		self.train()
 
 	def train(self):
@@ -123,3 +127,20 @@ class Runner:
 		self.val_loss(t_loss)
 		self.val_accuracy(labels, predictions)
 		# self.confusion_matrix.update_state(labels, predictions)
+
+	def _log_beautiful_dict(self, input_dict, headline):
+		# Headline
+		logging.info("=" * 40)  # Increased width for longer strings
+		logging.info(f"{headline}:")
+		logging.info("=" * 40)
+
+		# Determine maximum widths
+		max_key_len = max(len(k) for k in input_dict.keys()) + 2  # Add 2 for padding
+		max_val_len = max(len(str(v)) for v in input_dict.values()) + 2
+
+		# Key-value pairs
+		for key, value in input_dict.items():
+			logging.info(f"| {key:<{max_key_len}} | {value:>{max_val_len}} |")  # Pad both key and value
+
+		# Bottom border
+		logging.info("=" * 40)

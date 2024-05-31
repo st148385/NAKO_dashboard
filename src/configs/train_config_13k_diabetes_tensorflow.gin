@@ -1,0 +1,61 @@
+include "configs/__base__/13k_diabetes_base_config.gin"
+
+# -----------------------------------------------------------------------
+
+
+####################################################
+#       Workflow/Preprocessing specific stuff      #
+####################################################
+
+# Specify Workflow/Preprocess Configuration
+WorkflowFactory.preprocess_basis = {
+    "basis_age": None,
+    "basis_sex": None,
+    "BD02": None,
+}
+# -----------------------------------------------------------------------
+
+####################################################
+#            Dataloader specific stuff             #
+####################################################
+# Specify the Dataloader Configuration
+DataLoaderFactory.dataloader_name = "TensorflowDataloader"
+DataLoaderFactory.target_feature = "basis_sex"
+DataLoaderFactory.scope = "classification"
+
+
+# -----------------------------------------------------------------------
+
+####################################################
+#            Model and Train specific              #
+####################################################
+# Specify the model Configuration
+ModelFactory.model_name = "DummyModelTensorflow"
+
+# Specify Custom modules and give to Runner
+# LOSS
+loss/sparse_categorical_loss.name = "SparseCategoricalLoss"
+loss/sparse_categorical_loss.from_logits = True
+
+# OPTIMIZER
+optimizer/adam_optimizer.learning_rate = 0.001
+
+# Track metrics/loss
+# -- train -- #
+train_loss/mean_metric.name = "train_loss"
+train_acc/sparse_categorical_accuracy_metric.name = "train_acc"
+# -- val -- #
+val_loss/mean_metric.name = "val_loss"
+val_acc/sparse_categorical_accuracy_metric.name = "val_acc"
+
+####################################################
+#                Assign to Runner                  #
+####################################################
+Runner.train_loss = @train_loss/mean_metric()
+Runner.train_acc = @train_acc/sparse_categorical_accuracy_metric()
+Runner.val_loss = @val_loss/mean_metric()
+Runner.val_acc = @val_acc/sparse_categorical_accuracy_metric()
+Runner.loss = @loss/sparse_categorical_loss()
+Runner.optimizer = @optimizer/adam_optimizer()
+Runner.num_epochs = 10
+Runner.log_interval = 5000
