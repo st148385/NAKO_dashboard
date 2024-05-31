@@ -35,6 +35,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 	:param dataset: dataset name
 	:type dataset: str
 	"""
+
 	# Combine root and dataset name
 	data_root = Path(root_dir, dataset)
 
@@ -217,6 +218,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 		st.write(filtered_correlation)
 
 		col5, col6 = st.columns(2)
+
 		"""
 		with col5:
 			for groupby in groupby_options:

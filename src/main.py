@@ -19,6 +19,7 @@ flags.DEFINE_string(
 	"experiment_dir", None, "Specify folder to resume training, otherwise train from scratch", short_name="e"
 )
 flags.DEFINE_string("config_file", None, "Specify the configuration file to use, e.g. train_config.gin", short_name="c")
+flags.DEFINE_string("wandb_api_key", None, "Provide API key if training shall be tracked on WandB", short_name="wb")
 
 
 def main(argv) -> None:
@@ -42,7 +43,9 @@ def main(argv) -> None:
 	model_factory = ModelFactory(ds_info=ds_info)
 
 	# Init runner with dataloader and model.
-	runner = Runner(model=model_factory.model, dataloader=dataloader, run_paths=run_paths)
+	runner = Runner(
+		model=model_factory.model, dataloader=dataloader, run_paths=run_paths, wandb_api_key=FLAGS.wandb_api_key
+	)
 	runner.run()
 
 	return

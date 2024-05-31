@@ -4,6 +4,7 @@ from typing import Dict, Union
 import gin
 import sklearn
 import tensorflow as tf
+import wandb
 from data.dataloaders import ScikitLearnDataloader, TensorflowDataloader
 
 
@@ -14,6 +15,7 @@ class Runner:
 		model: Union[tf.keras.Model, sklearn.base.BaseEstimator],
 		dataloader: Union[ScikitLearnDataloader, TensorflowDataloader],
 		run_paths: Dict[str, str],
+		wandb_api_key: str = None,
 		num_epochs: int = 10,
 		log_interval: int = 5000,
 		**kwargs,
@@ -22,6 +24,7 @@ class Runner:
 		self.dataloader = dataloader
 		self.train_ds, self.val_ds, self.ds_info = dataloader.get_datasets()
 		self.run_paths = run_paths
+		self.wandb_api_key = wandb_api_key
 
 		# Assertion if specific info not in ds_info
 		assert self.ds_info.get("num_samples"), "num_samples not in ds_info, check your dataloader"
@@ -50,6 +53,9 @@ class Runner:
 		# Extract kwargs SciKitLearn Specific
 
 	def run(self):
+		# Check if API key is valid
+		self._configure_wandb()
+
 		# Log Dataset info
 		self._log_beautiful_dict(self.ds_info, "Dataset Information")
 
@@ -92,6 +98,16 @@ class Runner:
 					self.val_accuracy.result() * 100,
 				)
 			)
+			if self.wandb_api_key:
+				wandb.log(
+					{
+						"train_loss": self.train_loss.result(),
+						"train_accuracy": self.train_accuracy.result(),
+						"val_loss": self.val_loss.result(),
+						"val_accuracy": self.val_accuracy.result(),
+						"epoch": epoch,
+					}
+				)
 
 			logging.info("-" * 40)
 
@@ -144,3 +160,17 @@ class Runner:
 
 		# Bottom border
 		logging.info("=" * 40)
+
+	def _configure_wandb(self):
+		# Attempt to log in to wandb if API key is provided
+		if self.wandb_api_key:
+			try:
+				wandb.login(key=self.wandb_api_key)
+			except wandb.errors.error.UsageError:  # Invalid API key
+				logging.warning("Invalid wandb API key. Disabling wandb logging.")
+				self.wandb_api_key = None  # Reset to None to disable logging
+
+		# Log to wandb if logged in successfully
+		if self.wandb_api_key:
+			wandb.init(project="Research-thesis", config=self.ds_info)
+			wandb.config.update(self.ds_info)
