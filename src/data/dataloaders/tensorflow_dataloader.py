@@ -64,6 +64,8 @@ class TensorflowDataloader(BaseDataLoader):
 		features_full = numeric_data.drop(self.target_feature).to_numpy().astype("float32")
 		labels_full = numeric_data[self.target_feature].to_numpy().astype("float32")
 
+		ds_info = self._get_dataset_info(self.data, labels_full, self.scope)
+
 		# Split the data
 		train_indices, val_indices = train_test_split(
 			range(len(features_full)), test_size=self.val_split, shuffle=self.shuffle, random_state=self.seed
@@ -73,12 +75,28 @@ class TensorflowDataloader(BaseDataLoader):
 		features = features_full[train_indices]
 		labels = labels_full[train_indices]
 		train_ds = tf.data.Dataset.from_tensor_slices({"features": features, "labels": labels})
+		# TODO check behavior
+		train_ds = train_ds.map(lambda x: self._remap_nan(x, self.ignore_value))
 		train_ds = train_ds.batch(self.batch_size)
+		train_ds = train_ds.repeat(-1)
+		train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 		# Create Validation dataset
 		features = features_full[val_indices]
 		labels = labels_full[val_indices]
 		val_ds = tf.data.Dataset.from_tensor_slices({"features": features, "labels": labels})
+		# TODO check behavior
+		val_ds = val_ds.map(lambda x: self._remap_nan(x, self.ignore_value))
 		val_ds = val_ds.batch(self.batch_size)
 
-		return train_ds, val_ds
+		return train_ds, val_ds, ds_info
+
+	@tf.function
+	def _remap_nan(self, data_dict, ignore_value):
+		data_dict_modified = data_dict.copy()
+		ignore_value_float = tf.cast(ignore_value, tf.float32)
+		for key in data_dict_modified:
+			data_dict_modified[key] = tf.where(
+				tf.math.is_nan(data_dict_modified[key]), ignore_value_float, data_dict_modified[key]
+			)
+		return data_dict_modified

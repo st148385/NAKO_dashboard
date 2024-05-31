@@ -63,12 +63,12 @@ class ScikitLearnDataloader(BaseDataLoader):
 		if self.batch_size <= 0:
 			raise ValueError(f"Batch size must be greater than 0. Got {self.batch_size}")
 
-		X = self.data.drop(self.target_feature).to_numpy()
-		y = self.data[self.target_feature].to_numpy()
+		features = self.data.drop(self.target_feature).to_numpy()
+		labels = self.data[self.target_feature].to_numpy()
 
 		# Split the data
 		X_train, X_val, y_train, y_val = train_test_split(
-			X, y, test_size=self.val_split, shuffle=self.shuffle, random_state=self.seed
+			features, labels, test_size=self.val_split, shuffle=self.shuffle, random_state=self.seed
 		)
 
 		# Create training data batches
@@ -83,4 +83,6 @@ class ScikitLearnDataloader(BaseDataLoader):
 			batch = {"features": X_val[i : i + self.batch_size], "labels": y_val[i : i + self.batch_size]}
 			val_ds.append(batch)
 
-		return train_ds, val_ds
+		ds_info = self._get_dataset_info(self.data, labels, self.scope)
+
+		return train_ds, val_ds, ds_info

@@ -35,9 +35,11 @@ class BaseDataLoader(ABC):
 		data: pl.DataFrame,
 		target_feature: str,
 		batch_size: int,
+		scope: str = "classification",
 		val_split: float = 0.2,
 		shuffle: bool = True,
 		seed: int = 42,
+		ignore_value: int = -1,
 	):
 		"""
 		Initializes the ``BaseDataLoader``.
@@ -48,6 +50,8 @@ class BaseDataLoader(ABC):
 		:type target_feature: str
 		:param batch_size: The size of each batch of data.
 		:type batch_size: int
+		:param scope: Define the task, either classification or regression (default: classification).
+		:type scope: str
 		:param val_split: The proportion of data to be used for validation (default: 0.2).
 		:type val_split: float
 		:param shuffle: Whether to shuffle the data before splitting (default: True).
@@ -69,7 +73,15 @@ class BaseDataLoader(ABC):
 		self.val_split = val_split
 		self.shuffle = shuffle
 		self.seed = seed
+		self.scope = scope
+		self.ignore_value = ignore_value
 		self._validate_data()
+		self._validate_scope()
+
+		# If Classification we remap the labels to start from 0, ..., C-1
+		# in addition we store self.label_map to be able to remap later to original classes
+		if self.scope.lower() != "regression":
+			self._remap_labels()
 
 	def _validate_data(self):
 		"""
@@ -84,6 +96,18 @@ class BaseDataLoader(ABC):
 
 		if self.target_feature not in self.data.columns:
 			raise KeyError(f"Target feature '{self.target_feature}' not in data.")
+
+	def _validate_scope(self):
+		"""Validate if the scope is correct.
+
+		Scope defines e.g. if classification or regression.
+
+		:raises KeyError: If the ``target_feature`` is not found in the DataFrame.
+		"""
+		assert self.scope.lower() in {
+			"regression",
+			"classification",
+		}, f"Scope must be 'regression' or 'classification', not {self.scope}"
 
 	@abstractmethod
 	def get_datasets(self) -> Tuple[Any, Any]:
@@ -100,3 +124,29 @@ class BaseDataLoader(ABC):
 		"""
 
 		pass
+
+	def _get_dataset_info(self, data, labels, scope: str):
+		ds_info = {
+			"num_samples": len(data),
+			"num_features": len(data.columns) - 1,  # Exclude target feature
+			"scope": scope,
+			"batch_size": self.batch_size,
+			"target_feature": self.target_feature,
+			"val_split": self.val_split,
+			"ignore_value": self.ignore_value,
+		}
+
+		if scope.lower() != "regression":
+			if not isinstance(labels, pl.DataFrame):
+				df = pl.from_numpy(labels, schema=["labels"])
+			n_unique = df["labels"].n_unique()
+			ds_info.update({"num_classes": n_unique})
+
+		return ds_info
+
+	def _remap_labels(self):
+		unique_labels = self.data[self.target_feature].unique().to_list()
+		self.label_map = {label: i for i, label in enumerate(unique_labels)}  # Create the mapping
+		self.data = self.data.with_columns(
+			pl.col(self.target_feature).map_dict(self.label_map).alias(self.target_feature)
+		)  # Apply it

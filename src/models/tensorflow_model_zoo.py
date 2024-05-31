@@ -1,17 +1,21 @@
+from typing import Any, Dict
+
 import tensorflow as tf
 from tensorflow.keras import layers
 
 
 class DummyModelTensorflow(tf.keras.Model):
-	def __init__(self, input_shape, output_shape, **kwargs):
-		super(DummyModelTensorflow).__init__(**kwargs)
+	def __init__(self, ds_info: Dict[str, Any], **kwargs):
+		super().__init__(**kwargs)
 
-		self.input_layer = layers.Input(shape=input_shape, name="input")
+		num_classes = ds_info.get("num_classes")
 		self.hidden_layer = layers.Dense(32, activation="relu")
-		self.output_layer = layers.Dense(output_shape, activation="linear")
+		self.output_layer = layers.Dense(1, activation="linear")
+
+		if num_classes:
+			self.output_layer = layers.Dense(num_classes, activation="linear")
 
 	def call(self, inputs):
-		x = self.input_layer(inputs)
-		x = self.hidden_layer(x)
+		x = self.hidden_layer(inputs)
 		out = self.output_layer(x)
 		return out
