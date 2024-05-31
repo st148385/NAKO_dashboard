@@ -93,10 +93,8 @@ class TensorflowDataloader(BaseDataLoader):
 
 	@tf.function
 	def _remap_nan(self, data_dict, ignore_value):
-		data_dict_modified = data_dict.copy()
+		new_data_dict = {}
 		ignore_value_float = tf.cast(ignore_value, tf.float32)
-		for key in data_dict_modified:
-			data_dict_modified[key] = tf.where(
-				tf.math.is_nan(data_dict_modified[key]), ignore_value_float, data_dict_modified[key]
-			)
-		return data_dict_modified
+		for key in data_dict:
+			new_data_dict[key] = tf.where(tf.math.is_nan(data_dict[key]), ignore_value_float, data_dict[key])
+		return new_data_dict
