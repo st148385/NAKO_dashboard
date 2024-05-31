@@ -76,6 +76,8 @@ class TensorflowDataloader(BaseDataLoader):
 		labels = labels_full[train_indices]
 		train_ds = tf.data.Dataset.from_tensor_slices({"features": features, "labels": labels})
 		train_ds = train_ds.batch(self.batch_size)
+		train_ds = train_ds.repeat(-1)
+		train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
 		# Create Validation dataset
 		features = features_full[val_indices]
