@@ -38,7 +38,7 @@ loss/sparse_categorical_loss.name = "SparseCategoricalLoss"
 loss/sparse_categorical_loss.from_logits = True
 
 # OPTIMIZER
-optimizer/adam_optimizer.learning_rate = 0.02
+optimizer/adam_optimizer.learning_rate = 0.001
 
 # Track metrics/loss
 # -- train -- #
@@ -47,9 +47,6 @@ train_acc/sparse_categorical_accuracy_metric.name = "train_acc"
 # -- val -- #
 val_loss/mean_metric.name = "val_loss"
 val_acc/sparse_categorical_accuracy_metric.name = "val_acc"
-
-
-# -----------------------------------------------------------------------
 
 ####################################################
 #                Assign to Runner                  #
@@ -61,3 +58,4 @@ Runner.val_acc = @val_acc/sparse_categorical_accuracy_metric()
 Runner.loss = @loss/sparse_categorical_loss()
 Runner.optimizer = @optimizer/adam_optimizer()
 Runner.num_epochs = 10
+Runner.log_interval = 5000

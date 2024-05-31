@@ -14,7 +14,7 @@ WorkflowFactory.data_paths = {
     }
 
 WorkflowFactory.preprocess_basis = {
-    '0': None,
+    '0': [%TRANSFORMS.MIN_MAX_NORM, %TRANSFORMS.DROP],
     '0_right': None,
     '1': None,
     '1_right': None,
@@ -344,7 +344,7 @@ WorkflowFactory.preprocess_basis = {
 
 # BaseDataLoader settings
 # TODO data_paths probably will be removed since the workflow is reading the data already.
-BaseDataLoader.batch_size = 32
+BaseDataLoader.batch_size = 100
 BaseDataLoader.target_feature = "basis_age"
 BaseDataLoader.seed = 42
 BaseDataLoader.shuffle = True

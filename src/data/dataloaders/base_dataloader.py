@@ -39,6 +39,7 @@ class BaseDataLoader(ABC):
 		val_split: float = 0.2,
 		shuffle: bool = True,
 		seed: int = 42,
+		ignore_value: int = -1,
 	):
 		"""
 		Initializes the ``BaseDataLoader``.
@@ -73,6 +74,7 @@ class BaseDataLoader(ABC):
 		self.shuffle = shuffle
 		self.seed = seed
 		self.scope = scope
+		self.ignore_value = ignore_value
 		self._validate_data()
 		self._validate_scope()
 
@@ -123,12 +125,15 @@ class BaseDataLoader(ABC):
 
 		pass
 
-	@staticmethod
-	def _get_dataset_info(data, labels, scope: str):
+	def _get_dataset_info(self, data, labels, scope: str):
 		ds_info = {
 			"num_samples": len(data),
 			"num_features": len(data.columns) - 1,  # Exclude target feature
 			"scope": scope,
+			"batch_size": self.batch_size,
+			"target_feature": self.target_feature,
+			"val_split": self.val_split,
+			"ignore_value": self.ignore_value,
 		}
 
 		if scope.lower() != "regression":

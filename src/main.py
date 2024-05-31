@@ -18,7 +18,6 @@ flags.DEFINE_boolean("train", True, "Specify if train mode or eval mode.")
 flags.DEFINE_string(
 	"experiment_dir", None, "Specify folder to resume training, otherwise train from scratch", short_name="e"
 )
-
 flags.DEFINE_string("config_file", None, "Specify the configuration file to use, e.g. train_config.gin", short_name="c")
 
 

@@ -9,7 +9,6 @@ class DummyModelTensorflow(tf.keras.Model):
 		super().__init__(**kwargs)
 
 		num_classes = ds_info.get("num_classes")
-		print(ds_info)
 		self.hidden_layer = layers.Dense(32, activation="relu")
 		self.output_layer = layers.Dense(1, activation="linear")
 
