@@ -18,7 +18,7 @@ class Runner:
 	):
 		self.model = model
 		self.dataloader = dataloader
-		self.train_ds, self.val_ds = dataloader.get_datasets()
+		self.train_ds, self.val_ds, self.ds_info = dataloader.get_datasets()
 		self.run_paths = run_paths
 
 		# ------------------ GIN CONFIGURABLES --------------- #
@@ -27,7 +27,7 @@ class Runner:
 
 		# Extract kwargs Tensorflow specific
 		# Train stuff
-		self.loss_obj = kwargs.get("loss")
+		self.loss_object = kwargs.get("loss")
 		self.optimizer = kwargs.get("optimizer")
 		self.train_loss = kwargs.get("train_loss")
 		self.train_accuracy = kwargs.get("train_acc")
@@ -54,13 +54,14 @@ class Runner:
 
 		for batch in self.train_ds:
 			features, labels = batch["features"], batch["labels"]
+			self._train_step_tensorflow(features, labels)
 
 	def _train_scikitlearn(self):
 		# Scikit-learn training logic
 		for batch in self.train_ds:
 			features, labels = batch["features"], batch["labels"]
 
-	@tf.function
+	# @tf.function
 	def _train_step_tensorflow(self, features, labels):
 		with tf.GradientTape() as tape:
 			predictions = self.model(features, training=True)

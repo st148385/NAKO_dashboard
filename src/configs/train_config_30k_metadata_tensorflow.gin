@@ -21,6 +21,7 @@ WorkflowFactory.preprocess_basis = {
 # Specify the Dataloader Configuration
 DataLoaderFactory.dataloader_name = "TensorflowDataloader"
 DataLoaderFactory.target_feature = "basis_sex"
+DataLoaderFactory.scope = "classification"
 
 
 # -----------------------------------------------------------------------
@@ -34,7 +35,7 @@ ModelFactory.model_name = "DummyModelTensorflow"
 # Specify Custom modules and give to Runner
 # LOSS
 loss/sparse_categorical_loss.name = "SparseCategoricalLoss"
-loss/sparse_categorical_loss.from_logits = False
+loss/sparse_categorical_loss.from_logits = True
 
 # OPTIMIZER
 optimizer/adam_optimizer.learning_rate = 0.02

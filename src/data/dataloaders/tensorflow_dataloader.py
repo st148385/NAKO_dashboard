@@ -81,4 +81,6 @@ class TensorflowDataloader(BaseDataLoader):
 		val_ds = tf.data.Dataset.from_tensor_slices({"features": features, "labels": labels})
 		val_ds = val_ds.batch(self.batch_size)
 
-		return train_ds, val_ds
+		ds_info = self._get_dataset_info(self.data, labels_full, self.scope)
+
+		return train_ds, val_ds, ds_info

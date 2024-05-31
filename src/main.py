@@ -38,17 +38,12 @@ def main(argv) -> None:
 	# Create DataLoader, Process data to correct format
 	dataloader_factory = DataLoaderFactory(data=data)
 	dataloader = dataloader_factory.dataloader
-	train_ds, _ = dataloader.get_datasets()
+	_, _, ds_info = dataloader.get_datasets()
 
-	# Load model with correct shapes
-	for batch in train_ds:
-		input_shape = batch["features"].shape[1:]
-		output_shape = batch["labels"].shape[1:]
-		break
-	wrapper_model = ModelFactory(input_shape=input_shape, output_shape=output_shape)
+	model_factory = ModelFactory(ds_info=ds_info)
 
 	# Init runner with dataloader and model.
-	runner = Runner(model=wrapper_model.model, dataloader=dataloader, run_paths=run_paths)
+	runner = Runner(model=model_factory.model, dataloader=dataloader, run_paths=run_paths)
 	runner.train()
 
 	return

@@ -35,6 +35,7 @@ class BaseDataLoader(ABC):
 		data: pl.DataFrame,
 		target_feature: str,
 		batch_size: int,
+		scope: str = "classification",
 		val_split: float = 0.2,
 		shuffle: bool = True,
 		seed: int = 42,
@@ -48,6 +49,8 @@ class BaseDataLoader(ABC):
 		:type target_feature: str
 		:param batch_size: The size of each batch of data.
 		:type batch_size: int
+		:param scope: Define the task, either classification or regression (default: classification).
+		:type scope: str
 		:param val_split: The proportion of data to be used for validation (default: 0.2).
 		:type val_split: float
 		:param shuffle: Whether to shuffle the data before splitting (default: True).
@@ -69,7 +72,9 @@ class BaseDataLoader(ABC):
 		self.val_split = val_split
 		self.shuffle = shuffle
 		self.seed = seed
+		self.scope = scope
 		self._validate_data()
+		self._validate_scope()
 
 	def _validate_data(self):
 		"""
@@ -84,6 +89,18 @@ class BaseDataLoader(ABC):
 
 		if self.target_feature not in self.data.columns:
 			raise KeyError(f"Target feature '{self.target_feature}' not in data.")
+
+	def _validate_scope(self):
+		"""Validate if the scope is correct.
+
+		Scope defines e.g. if classification or regression.
+
+		:raises KeyError: If the ``target_feature`` is not found in the DataFrame.
+		"""
+		assert self.scope.lower() in {
+			"regression",
+			"classification",
+		}, f"Scope must be 'regression' or 'classification', not {self.scope}"
 
 	@abstractmethod
 	def get_datasets(self) -> Tuple[Any, Any]:
@@ -100,3 +117,19 @@ class BaseDataLoader(ABC):
 		"""
 
 		pass
+
+	@staticmethod
+	def _get_dataset_info(data, labels, scope: str):
+		ds_info = {
+			"num_samples": len(data),
+			"num_features": len(data.columns) - 1,  # Exclude target feature
+			"scope": scope,
+		}
+
+		if scope.lower() != "regression":
+			if not isinstance(labels, pl.DataFrame):
+				df = pl.from_numpy(labels, schema=["labels"])
+			n_unique = df["labels"].n_unique()
+			ds_info.update({"num_classes": n_unique})
+
+		return ds_info
