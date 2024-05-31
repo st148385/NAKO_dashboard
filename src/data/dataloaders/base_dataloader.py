@@ -76,6 +76,11 @@ class BaseDataLoader(ABC):
 		self._validate_data()
 		self._validate_scope()
 
+		# If Classification we remap the labels to start from 0, ..., C-1
+		# in addition we store self.label_map to be able to remap later to original classes
+		if self.scope.lower() != "regression":
+			self._remap_labels()
+
 	def _validate_data(self):
 		"""
 		Performs basic validation checks on the input data.
@@ -133,3 +138,10 @@ class BaseDataLoader(ABC):
 			ds_info.update({"num_classes": n_unique})
 
 		return ds_info
+
+	def _remap_labels(self):
+		unique_labels = self.data[self.target_feature].unique().to_list()
+		self.label_map = {label: i for i, label in enumerate(unique_labels)}  # Create the mapping
+		self.data = self.data.with_columns(
+			pl.col(self.target_feature).map_dict(self.label_map).alias(self.target_feature)
+		)  # Apply it
