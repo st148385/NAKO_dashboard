@@ -21,10 +21,12 @@ def parse_args():
 		"-c", "--config_file", required=True, help="Path to the configuration file (e.g., train_config.gin)"
 	)
 	parser.add_argument("-wb", "--wandb_api_key", help="API key for Weights & Biases tracking")
+
+	# CURRENTLY ONLY CLASSIFICATION REALLY SUPPORTED
 	parser.add_argument(
 		"-s",
 		"--scope",
-		choices=["classification", "regression"],
+		choices=["classification"],
 		required=True,
 		help="scope type either regression or classification, case sensitive",
 	)
