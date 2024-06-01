@@ -6,8 +6,6 @@ from rich.theme import Theme
 
 
 def set_loggers_with_rich(path_log=None, logging_level=logging.INFO, b_debug=False):
-	"""Configures loggers for file and console output using Rich."""
-
 	custom_theme = Theme(
 		{
 			"logging.level.debug": "dim",
@@ -18,7 +16,6 @@ def set_loggers_with_rich(path_log=None, logging_level=logging.INFO, b_debug=Fal
 		}
 	)
 
-	# Create a RichHandler with custom theme
 	rich_handler = RichHandler(
 		level=logging_level,
 		rich_tracebacks=True,
@@ -28,8 +25,10 @@ def set_loggers_with_rich(path_log=None, logging_level=logging.INFO, b_debug=Fal
 		markup=True,
 	)
 
-	# Update the log message format for RichHandler
-	rich_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s - %(name)s: %(message)s", datefmt="%X"))
+	# Update the log message format for RichHandler (add %(filename)s)
+	rich_handler.setFormatter(
+		logging.Formatter("[%(asctime)s] %(levelname)s - %(filename)s:%(funcName)s - %(message)s", datefmt="%X")
+	)
 
 	logging.basicConfig(
 		level=logging_level if not b_debug else logging.DEBUG,
@@ -38,10 +37,12 @@ def set_loggers_with_rich(path_log=None, logging_level=logging.INFO, b_debug=Fal
 		handlers=[rich_handler],
 	)
 
-	# File Handler (if path_log is provided)
 	if path_log:
+		# Update the log message format for file_handler (add %(filename)s)
 		file_handler = logging.FileHandler(path_log)
-		file_handler.setFormatter(logging.Formatter("%(message)s"))  # No colors for file
+		file_handler.setFormatter(
+			logging.Formatter("[%(asctime)s] %(levelname)s - %(filename)s:%(funcName)s - %(message)s", datefmt="%X")
+		)
 		logging.getLogger().addHandler(file_handler)
 
 
