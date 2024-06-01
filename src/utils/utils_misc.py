@@ -1,88 +1,89 @@
 import logging
 
-
-class CustomFormatter(logging.Formatter):
-	"""Logging formatter with colorized output for different log levels.
-
-	This formatter applies ANSI escape codes to colorize the log output based on the
-	severity level of the message. It uses a clear and concise format to display
-	the timestamp, log level, source file, line number, and the log message itself.
-
-	**Attributes:**
-
-	- grey: ANSI escape code for grey text.
-	- blue: ANSI escape code for blue text.
-	- yellow: ANSI escape code for yellow text.
-	- red: ANSI escape code for red text.
-	- bold_red: ANSI escape code for bold red text.
-	- reset: ANSI escape code to reset text formatting.
-	- FORMAT: The base format string for log messages.
-	- FORMATS: A dictionary mapping logging levels to their corresponding
-	  colorized format strings.
-
-	**Methods:**
-
-	- format(record): Formats the log record according to the specified
-	  format and color for its log level.
-	"""
-
-	grey = "\x1b[38;21m"
-	blue = "\x1b[38;5;39m"
-	yellow = "\x1b[38;5;226m"
-	red = "\x1b[38;5;196m"
-	bold_red = "\x1b[31;1m"
-	reset = "\x1b[0m"
-
-	FORMAT = "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)d  >>>  %(message)s"
-
-	FORMATS = {
-		logging.DEBUG: f"{grey}{FORMAT}{reset}",
-		logging.INFO: f"{blue}{FORMAT}{reset}",
-		logging.WARNING: f"{yellow}{FORMAT}{reset}",
-		logging.ERROR: f"{red}{FORMAT}{reset}",
-		logging.CRITICAL: f"{bold_red}{FORMAT}{reset}",
-	}
-
-	def format(self, record):
-		log_fmt = self.FORMATS.get(record.levelno)
-		formatter = logging.Formatter(log_fmt)
-		return formatter.format(record)
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.theme import Theme
 
 
-def set_loggers(path_log=None, logging_level=logging.INFO, b_stream=True, b_debug=False):
-	"""Configures loggers for file and/or console output.
+def set_loggers_with_rich(path_log=None, logging_level=logging.INFO, b_debug=False):
+	"""Configures loggers for file and console output using Rich."""
 
-	This function sets up logging to a file (if a path is provided) and/or the
-	console. It allows you to customize the logging level and enable/disable debug mode.
+	custom_theme = Theme(
+		{
+			"logging.level.debug": "dim",
+			"logging.level.info": "dim cyan",
+			"logging.level.warning": "magenta",
+			"logging.level.error": "red",
+			"logging.level.critical": "bold red",
+		}
+	)
 
-	:param path_log: The path to the log file. If None, logging to a file is disabled.
-	:type path_log: str, optional
-	:param logging_level: The minimum logging level to capture. Defaults to logging.INFO.
-	:type logging_level: int, optional
-	:param b_stream: Whether to log to the console. Defaults to True.
-	:type b_stream: bool, optional
-	:param b_debug: Whether to enable debug mode, setting the logging level to DEBUG. Defaults to False.
-	:type b_debug: bool, optional
-	"""
-	logger = logging.getLogger()
-	logger.setLevel(logging_level)
+	# Create a RichHandler with custom theme
+	rich_handler = RichHandler(
+		level=logging_level,
+		rich_tracebacks=True,
+		console=Console(theme=custom_theme),
+		show_time=True,
+		show_path=True,
+		markup=True,
+	)
 
-	# Remove existing handlers to avoid duplicate logs (but only if streaming)
-	if b_stream and logger.hasHandlers():
-		logger.handlers.clear()
+	# Update the log message format for RichHandler
+	rich_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s - %(name)s: %(message)s", datefmt="%X"))
+
+	logging.basicConfig(
+		level=logging_level if not b_debug else logging.DEBUG,
+		format="%(message)s",
+		datefmt="[%X]",
+		handlers=[rich_handler],
+	)
 
 	# File Handler (if path_log is provided)
 	if path_log:
 		file_handler = logging.FileHandler(path_log)
-		file_handler.setFormatter(logging.Formatter(CustomFormatter.FORMAT))  # Use uncolored format for file
-		logger.addHandler(file_handler)
+		file_handler.setFormatter(logging.Formatter("%(message)s"))  # No colors for file
+		logging.getLogger().addHandler(file_handler)
 
-	# Stream Handler (if enabled)
-	if b_stream:
-		stream_handler = logging.StreamHandler()
-		stream_handler.setFormatter(CustomFormatter(CustomFormatter.FORMAT))
-		logger.addHandler(stream_handler)
 
-	# Debug mode (if enabled)
-	if b_debug:
-		logger.setLevel(logging.DEBUG)  # Set to DEBUG level
+def log_dict(input_dict, headline="", indent=0):
+	"""Logs nested dictionaries with indentation, handling various data types."""
+
+	# Handle None and non-printable types
+	if input_dict is None:
+		input_dict = "None"
+	elif not isinstance(input_dict, (str, dict)):
+		input_dict = repr(input_dict)  # Use repr() for non-printable types
+
+	# Base case: if not a dict, just log the key-value pair
+	if not isinstance(input_dict, dict):
+		logging.info(" " * indent + f"| {headline:<20} | {input_dict:>20} |")
+		return
+
+	# Print headline if provided
+	if headline:
+		logging.info(" " * indent + "=" * 40)
+		logging.info(" " * indent + f"{headline}:")
+		logging.info(" " * indent + "=" * 40)
+
+	# Recursively process nested dictionaries
+	for key, value in input_dict.items():
+		new_headline = f"{key}:" if isinstance(value, dict) else str(key)
+		log_dict(value, new_headline, indent + 2)
+
+	# Print bottom border if headline was provided
+	if headline:
+		logging.info(" " * indent + "=" * 40)
+
+
+def gin_config_to_readable_dictionary(gin_config: dict) -> dict:
+	parsed_config = {}
+	for scope_name, bindings in gin_config.items():
+		# Ensure scope_name is a string
+		if isinstance(scope_name, tuple):
+			scope_name = ".".join(scope_name)
+
+		module_name = scope_name.rsplit(".", 1)[-1]
+		for binding_name, value in bindings.items():
+			new_key = f"{module_name}/{binding_name}"
+			parsed_config[new_key] = value
+	return parsed_config

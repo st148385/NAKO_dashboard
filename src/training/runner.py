@@ -6,6 +6,8 @@ import sklearn
 import tensorflow as tf
 import wandb
 from data.dataloaders import ScikitLearnDataloader, TensorflowDataloader
+from rich.progress import Progress
+from utils.utils_misc import gin_config_to_readable_dictionary, log_dict
 
 
 @gin.configurable
@@ -17,7 +19,6 @@ class Runner:
 		run_paths: Dict[str, str],
 		wandb_api_key: str = None,
 		num_epochs: int = 10,
-		log_interval: int = 5000,
 		**kwargs,
 	):
 		self.model = model
@@ -25,6 +26,7 @@ class Runner:
 		self.train_ds, self.val_ds, self.ds_info = dataloader.get_datasets()
 		self.run_paths = run_paths
 		self.wandb_api_key = wandb_api_key
+		self.config_dict = gin_config_to_readable_dictionary(gin.config._CONFIG)
 
 		# Assertion if specific info not in ds_info
 		assert self.ds_info.get("num_samples"), "num_samples not in ds_info, check your dataloader"
@@ -38,7 +40,6 @@ class Runner:
 
 		self.num_epochs = num_epochs
 		self.steps_per_epoch = self.num_samples // self.batch_size
-		self.log_interval = log_interval
 
 		# Extract kwargs Tensorflow specific
 		# Train stuff
@@ -56,8 +57,10 @@ class Runner:
 		# Check if API key is valid
 		self._configure_wandb()
 
+		# Log configuration
+		log_dict(self.config_dict, "GIN Configuration")
 		# Log Dataset info
-		self._log_beautiful_dict(self.ds_info, "Dataset Information")
+		log_dict(self.ds_info, "Dataset Information")
 
 		# Log
 		self.train()
@@ -72,32 +75,41 @@ class Runner:
 			raise ValueError("Unsupported DataLoader type")
 
 	def _train_tensorflow(self):
-		# TensorFlow-specific training logic
+		"""Trains a TensorFlow model with step progress bar and epoch-end metric logging."""
 		logging.info("Start TensorFlow training...")
 
 		for epoch in range(1, self.num_epochs + 1):
-			logging.info(f"Epoch: {epoch:5}")
+			with Progress() as progress:  # Progress bar only for steps within the epoch
+				step_task = progress.add_task(f"[blue]Epoch {epoch}", total=self.steps_per_epoch)
 
-			for step, batch in enumerate(self.train_ds, start=1):
-				features, labels = batch["features"], batch["labels"]
-				self._train_step_tensorflow(features, labels, self.ignore_value)
-				if (step * self.batch_size) % self.log_interval == 0:
-					logging.info(f"Processed {step * self.batch_size:8} samples")
-				if step >= self.steps_per_epoch:
-					break
+				for step, batch in enumerate(self.train_ds, start=1):
+					features, labels = batch["features"], batch["labels"]
+					self._train_step_tensorflow(features, labels, self.ignore_value)
 
-			for val_batch in self.val_ds:
-				self._val_step_tensorflow(val_batch["features"], val_batch["labels"], self.ignore_value)
+					# Update step progress
+					progress.update(step_task, advance=1)
 
-			template = "Loss: {:.2f}, Accuracy: {:.2f}%, Validation Loss: {:.2f}, Validation Accuracy: {:.2f}%"
+					if step >= self.steps_per_epoch:
+						break
+
+				for val_batch in self.val_ds:
+					self._val_step_tensorflow(val_batch["features"], val_batch["labels"], self.ignore_value)
+
+			# Log training and validation metrics after each epoch (outside the progress bar context)
+			template = (
+				"Epoch {} | Loss: {:.4f}, Accuracy: {:.2f}%, Validation Loss: {:.4f}, Validation Accuracy: {:.2f}%"
+			)
 			logging.info(
 				template.format(
+					epoch,  # Include the epoch number
 					self.train_loss.result(),
 					self.train_accuracy.result() * 100,
 					self.val_loss.result(),
 					self.val_accuracy.result() * 100,
 				)
 			)
+
+			# Log to wandb
 			if self.wandb_api_key:
 				wandb.log(
 					{
@@ -108,8 +120,6 @@ class Runner:
 						"epoch": epoch,
 					}
 				)
-
-			logging.info("-" * 40)
 
 	def _train_scikitlearn(self):
 		# Scikit-learn training logic
@@ -144,23 +154,6 @@ class Runner:
 		self.val_accuracy(labels, predictions)
 		# self.confusion_matrix.update_state(labels, predictions)
 
-	def _log_beautiful_dict(self, input_dict, headline):
-		# Headline
-		logging.info("=" * 40)  # Increased width for longer strings
-		logging.info(f"{headline}:")
-		logging.info("=" * 40)
-
-		# Determine maximum widths
-		max_key_len = max(len(k) for k in input_dict.keys()) + 2  # Add 2 for padding
-		max_val_len = max(len(str(v)) for v in input_dict.values()) + 2
-
-		# Key-value pairs
-		for key, value in input_dict.items():
-			logging.info(f"| {key:<{max_key_len}} | {value:>{max_val_len}} |")  # Pad both key and value
-
-		# Bottom border
-		logging.info("=" * 40)
-
 	def _configure_wandb(self):
 		# Attempt to log in to wandb if API key is provided
 		if self.wandb_api_key:
@@ -172,5 +165,5 @@ class Runner:
 
 		# Log to wandb if logged in successfully
 		if self.wandb_api_key:
-			wandb.init(project="Research-thesis", config=self.ds_info)
+			wandb.init(project="Research-thesis", config=self.config_dict)
 			wandb.config.update(self.ds_info)
