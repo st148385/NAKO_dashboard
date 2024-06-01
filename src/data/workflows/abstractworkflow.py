@@ -73,24 +73,19 @@ class AbstractWorkflow(ABC):
 			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
 			self.data = self.data.join(additional_data, on="ID", how="left")  # Assuming "ID" is the join key
 
-	@abstractmethod
-	def preprocess(self, data: pl.DataFrame) -> pl.DataFrame:
+	def _filter_by_config(self, data: pl.DataFrame) -> pl.DataFrame:
 		"""
-		Preprocesses the raw data.
-
 		This method defines a general preprocessing strategy applied to all datasets.
 		It iterates over features and transformations specified in the `preprocess_basis` dictionary,
 		applying transformations from the `TRANSFORMS` enum to each column as needed. It also logs and
 		drops features not explicitly listed in the `preprocess_basis`.
 
-		:param data: The raw data to preprocess.
+		:param data: The data to preprocess.
 		:type data: pl.DataFrame
 		:return: The preprocessed data.
 		:rtype: pl.DataFrame
 		:raises ValueError: If an invalid transformation is specified for a column.
-
 		"""
-
 		not_listed_features = data.columns
 		for column, transform_list in self._preprocess_basis.items():  # Now using enum values
 			if column in not_listed_features:
@@ -110,6 +105,22 @@ class AbstractWorkflow(ABC):
 		if not_listed_features:
 			logging.warn(f"Dropping not explicilty listed features from data: {not_listed_features}")
 		data = data.drop(not_listed_features)
+		return data
+
+	@abstractmethod
+	def preprocess(self, data: pl.DataFrame) -> pl.DataFrame:
+		"""
+		Preprocesses the raw data.
+
+		This method defines a general preprocessing strategy applied to all datasets.
+
+		:param data: The raw data to preprocess.
+		:type data: pl.DataFrame
+		:return: The preprocessed data.
+		:rtype: pl.DataFrame
+		:raises ValueError: If an invalid transformation is specified for a column.
+
+		"""
 		return data
 
 	@abstractmethod

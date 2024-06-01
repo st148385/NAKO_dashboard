@@ -1,6 +1,30 @@
 import gin
+import polars as pl
 
 from .abstractworkflow import AbstractWorkflow
+
+
+# Assuming df is your Polars DataFrame containing sa_ogtt0 and sa_ogtt2 columns
+def classify_diabtes_severity(row):
+	sa_ogtt0, sa_ogtt2 = row["sa_ogtt0"], row["sa_ogtt2"]
+
+	if sa_ogtt0 is None or sa_ogtt2 is None:
+		return None  # Handle None values appropriately, you can choose to return a specific class or None
+	if sa_ogtt0 >= 7 or sa_ogtt2 >= 11.1:
+		return 0  # Class 0
+	elif 6.1 <= sa_ogtt0 < 7:
+		return 1  # Class 1
+	elif 7.8 <= sa_ogtt2 < 11.1:
+		return 2  # Class 2
+	elif sa_ogtt0 < 6.1 and sa_ogtt2 < 7.8:
+		return 3  # Class 3
+	else:
+		raise ValueError(
+			"""
+			All cases of oGTT values should be caught and a class (0, 1, 2 or 3) determined for them, 
+			with the current class definitions. We can't get here! Look for mistakes in the if statement. \n
+			The problem occurred for sa_ogtt0 = {sa_ogtt0} and sa_ogtt2 = {sa_ogtt2}"""
+		)
 
 
 @gin.configurable
@@ -38,8 +62,23 @@ class Diabetes13kWorkflow(AbstractWorkflow):
 
 		# General preprocessing
 		data = super().preprocess(data)
-
 		# TODO: Add dataset-specific preprocessing steps here.
+
+		########################################################
+		####### use WHO definition regarding sa_ogtt to ########
+		####### 	create diabetes_severity column		########
+		data = data.with_columns(
+			pl.struct(["sa_ogtt0", "sa_ogtt2"])
+			.apply(lambda row: classify_diabtes_severity(row))
+			.alias("diabetes_class")
+		)
+		########################################################
+
+		# The manually choosen stuff will be done here then.
+		# TODO might need to rethink this, if artifcially adding stuff here
+		# this won't appear in the original config.
+
+		data = self._filter_by_config(data)
 
 		return data
 
