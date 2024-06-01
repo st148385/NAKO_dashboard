@@ -62,7 +62,7 @@ class Runner:
 		# Log Dataset info
 		log_dict(self.ds_info, "Dataset Information")
 
-		# Log
+		# Start training
 		self.train()
 
 	def train(self):

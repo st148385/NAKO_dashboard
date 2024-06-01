@@ -3,11 +3,12 @@ import logging
 from pathlib import Path
 
 import gin
+import gin_registry
 from data.dataloaders import DataLoaderFactory
 from data.workflows import WorkflowFactory
 from models import ModelFactory
 from training import Runner
-from utils import tensorflow_gin_registry, utils_misc, utils_params
+from utils import utils_misc, utils_params
 
 
 def parse_args():
