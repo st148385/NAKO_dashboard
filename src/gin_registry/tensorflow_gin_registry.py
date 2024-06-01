@@ -126,3 +126,33 @@ def sparse_categorical_accuracy_metric(
 
 	metric = tf.keras.metrics.SparseCategoricalAccuracy(name=name, dtype=dtype)
 	return metric
+
+
+@gin.configurable
+def mean_squared_error_loss(
+	reduction: str = "sum_over_batch_size",
+	name: str = "mean_squared_error",
+) -> tf.keras.losses.MeanSquaredError:
+	"""
+	Creates and returns a MeanSquaredError loss function for Keras/TensorFlow.
+
+	This function serves as a Gin-configurable wrapper for the
+	`tf.keras.losses.MeanSquaredError` loss function. It allows you
+	to conveniently set the parameters of the loss function through your Gin configuration files.
+
+	:param reduction: Type of reduction to apply to the loss.
+	:type reduction: str
+	:param name: Name for the operation. Default is "mean_squared_error".
+	:type name: str
+	:return: An instance of ``tf.keras.losses.MeanSquaredError``.
+	:rtype: tf.keras.losses.MeanSquaredError
+
+	**Example (Gin Configuration):**
+
+	.. code-block::
+	    mean_squared_error_loss.reduction = 'sum'
+	    Runner.loss = @mean_squared_error_loss()
+	"""
+
+	loss_object = tf.keras.losses.MeanSquaredError(reduction=reduction, name=name)
+	return loss_object

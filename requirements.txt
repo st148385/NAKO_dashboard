@@ -5,4 +5,5 @@
     sphinx
     sphinx-rtd-theme
     seaborn
-    tensorflow
+    tensorflow[and-cuda]==2.15.1
+    wandb

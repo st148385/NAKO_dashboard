@@ -11,7 +11,13 @@ include "configs/__base__/13k_diabetes_base_config.gin"
 WorkflowFactory.preprocess_basis = {
     "basis_age": None,
     "basis_sex": None,
-    "BD02": None,
+    'sa_ogtt0': %TRANSFORMS.DROP,
+    'sa_ogtt2': %TRANSFORMS.DROP,
+    'hgr_lh3_kraft': None,
+    'hgr_rh1_kraft': None,
+    'hgr_rh2_kraft': None,
+    'hgr_rh3_kraft': None,
+    "diabetes_class": None
 }
 # -----------------------------------------------------------------------
 
@@ -20,8 +26,7 @@ WorkflowFactory.preprocess_basis = {
 ####################################################
 # Specify the Dataloader Configuration
 DataLoaderFactory.dataloader_name = "TensorflowDataloader"
-DataLoaderFactory.target_feature = "basis_sex"
-DataLoaderFactory.scope = "classification"
+DataLoaderFactory.target_feature = "diabetes_class"
 
 
 # -----------------------------------------------------------------------
@@ -58,4 +63,3 @@ Runner.val_acc = @val_acc/sparse_categorical_accuracy_metric()
 Runner.loss = @loss/sparse_categorical_loss()
 Runner.optimizer = @optimizer/adam_optimizer()
 Runner.num_epochs = 10
-Runner.log_interval = 5000

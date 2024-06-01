@@ -161,3 +161,4 @@ cython_debug/
 
 # Ignore DOCS folder for now...
 src/docs/_build
+src/wandb/

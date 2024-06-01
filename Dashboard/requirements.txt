@@ -1,0 +1,7 @@
+    pre-commit
+    numpy
+    pandas
+    matplotlib
+    streamlit
+    seaborn
+    statsmodels
