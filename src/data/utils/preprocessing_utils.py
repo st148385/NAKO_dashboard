@@ -1,10 +1,10 @@
 from typing import Any, Dict
 
 import polars as pl
-from data.utils.constants import IGNORE_VALUE
+from utils.constants import IGNORE_VALUE
 
 
-def filter_data_by_mapping_dict(data: pl.DataFrame, mapping_dict: Dict[int, Any]) -> pl.DataFrame:
+def filter_data_by_mapping_dict_nako(data: pl.DataFrame, mapping_dict: Dict[int, Any]) -> pl.DataFrame:
 	"""Filter the original data by using the mapping dict.
 
 	The mapping dict contains information about which data is "missing"
@@ -41,7 +41,7 @@ def filter_data_by_mapping_dict(data: pl.DataFrame, mapping_dict: Dict[int, Any]
 	return data.select(column_transformations)
 
 
-def get_mapping_from_metadata(metadata: pl.DataFrame) -> Dict[int, Dict[int, Any]]:
+def get_mapping_from_metadata_nako(metadata: pl.DataFrame) -> Dict[int, Dict[int, Any]]:
 	"""Get the value-label mapping from metadata (Polars DataFrame).
 
 	:param metadata: Polars DataFrame with "Ausprägung-Wert" and "Ausprägung-Label" columns

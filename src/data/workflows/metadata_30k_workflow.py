@@ -1,4 +1,8 @@
+import logging
+
 import gin
+from utils.constants import DATA_PATH, IGNORE_VALUE, METADATA_PATH, OUTPUT_DIR_PATH
+from utils.reading import read_data_with_polars
 
 from .abstractworkflow import AbstractWorkflow
 
@@ -21,6 +25,24 @@ class Metadata30kWorkflow(AbstractWorkflow):
 		:param \**kwargs: Keyword arguments passed to the base class constructor.
 		"""
 		super().__init__(**kwargs)
+
+		# Load metadata and main data
+		self.metadata = read_data_with_polars(
+			self.path_collection[METADATA_PATH],
+			separator=";",
+			encoding="utf-8",
+			infer_schema_length=0,
+			truncate_ragged_lines=True,
+		)
+		self.data = read_data_with_polars(self.path_collection[DATA_PATH], separator=";", encoding="latin1")
+
+		# Merge additional data (if any)
+		for data_name, data_path in self.path_collection.items():
+			if data_name in {DATA_PATH, METADATA_PATH}:
+				continue
+			logging.info(f"Merging '{data_name}' data...")
+			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
+			self.data = self.data.join(additional_data, on="ID", how="left")  # Assuming "ID" is the join key
 
 	def preprocess(self, data):
 		"""

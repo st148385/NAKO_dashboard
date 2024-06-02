@@ -6,7 +6,7 @@ from typing import Any, Dict
 import gin
 import polars as pl
 from transformations import TRANSFORMS, TRANSFORMS_DICT
-from utils.reading import read_data_with_polars
+from utils.constants import DATA_PATH, METADATA_PATH
 
 
 @gin.configurable
@@ -30,8 +30,8 @@ class AbstractWorkflow(ABC):
 	**Warning:**
 		This class cannot be instantiated directly.
 
-	:param data_paths: A dictionary mapping data types to file paths. Must include keys "metadata_path" and "data_path".
-	:type data_paths: Dict[str, str]
+	:param path_collection: A dictionary mapping data types to file paths. Must include keys "metadata_path" and "data_path".
+	:type path_collection: Dict[str, str]
 	:param preprocess_basis: A dictionary specifying preprocessing operations for each feature.
 	:type preprocess_basis: Dict[str, str], optional
 
@@ -39,39 +39,23 @@ class AbstractWorkflow(ABC):
 
 	def __init__(
 		self,
-		data_paths: Dict[str, str],
+		path_collection: Dict[str, str],
 		preprocess_basis: Dict[str, str] = None,
 	):
 		"""
 		Initializes the abstract workflow.
 
-		:param data_paths: A dictionary mapping data types to file paths.
-		:type data_paths: Dict[str, str]
+		:param path_collection: A dictionary mapping data types to file paths.
+		:type path_collection: Dict[str, str]
 		:param preprocess_basis: A dictionary specifying preprocessing operations for each feature.
 		:type preprocess_basis: Dict[str, str], optional
 		:raises KeyError: If required data paths ("metadata_path" or "data_path") are missing.
 		:raises FileNotFoundError: If any specified data file is not found.
 
 		"""
-		self._validate_paths(data_paths)
-		self.data_paths = data_paths
+		self._validate_paths(path_collection)
+		self.path_collection = path_collection
 		self._preprocess_basis = preprocess_basis
-
-		# Load metadata and main data
-		self.metadata = read_data_with_polars(
-			data_paths.pop("metadata_path"),
-			separator=";",
-			encoding="utf-8",
-			infer_schema_length=0,
-			truncate_ragged_lines=True,
-		)
-		self.data = read_data_with_polars(data_paths.pop("data_path"), separator=";", encoding="latin1")
-
-		# Merge additional data (if any)
-		for data_name, data_path in data_paths.items():
-			logging.info(f"Merging '{data_name}' data...")
-			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
-			self.data = self.data.join(additional_data, on="ID", how="left")  # Assuming "ID" is the join key
 
 	def _filter_by_config(self, data: pl.DataFrame) -> pl.DataFrame:
 		"""
@@ -164,16 +148,17 @@ class AbstractWorkflow(ABC):
 		return self.data
 
 	@staticmethod
-	def _validate_paths(data_paths: Dict[str, str]) -> None:
+	def _validate_paths(path_collection: Dict[str, str]) -> None:
 		"""Validates that the required paths exist and are files."""
 
-		check_keys = {"metadata_path", "data_path"}
-		target_keys = set(data_paths.keys())
+		check_keys = {METADATA_PATH, DATA_PATH}
+		target_keys = set(path_collection.keys())
 
 		if not check_keys.issubset(target_keys):
 			raise KeyError(f"Keys: {check_keys} not in {target_keys}")
 
-		for data_type, path in data_paths.items():
+		# Validate if input paths are right
+		for data_type, path in path_collection.items():
 			path = Path(path)
 			if not path.is_file():
 				raise FileNotFoundError(f"{data_type} not found at {path}")

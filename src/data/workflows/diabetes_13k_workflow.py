@@ -1,10 +1,12 @@
+import logging
 import math
 
 import gin
 import polars as pl
+from utils.constants import DATA_PATH, IGNORE_VALUE, METADATA_PATH, OUTPUT_DIR_PATH
+from utils.reading import read_data_with_polars
 
-from data.utils.constants import IGNORE_VALUE
-from data.utils.preprocessing_utils import filter_data_by_mapping_dict, get_mapping_from_metadata
+from data.utils.preprocessing_utils import filter_data_by_mapping_dict_nako, get_mapping_from_metadata_nako
 
 from .abstractworkflow import AbstractWorkflow
 
@@ -57,10 +59,23 @@ class Diabetes13kWorkflow(AbstractWorkflow):
 		"""
 		super().__init__(**kwargs)
 
-		# Get mapping dict using the metadata
-		self.mapping_dict = get_mapping_from_metadata(self.metadata)
-		# Replace Missing, unknown not valid data with nans
-		self.data = filter_data_by_mapping_dict(self.data, self.mapping_dict)
+		# Load metadata and main data
+		self.metadata = read_data_with_polars(
+			self.path_collection[METADATA_PATH],
+			separator=";",
+			encoding="utf-8",
+			infer_schema_length=0,
+			truncate_ragged_lines=True,
+		)
+		self.data = read_data_with_polars(self.path_collection[DATA_PATH], separator=";", encoding="latin1")
+
+		# Merge additional data (if any)
+		for data_name, data_path in self.path_collection.items():
+			if data_name in {DATA_PATH, METADATA_PATH}:
+				continue
+			logging.info(f"Merging '{data_name}' data...")
+			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
+			self.data = self.data.join(additional_data, on="ID", how="left")  # Assuming "ID" is the join key
 
 	def preprocess(self, data):
 		"""
@@ -79,6 +94,11 @@ class Diabetes13kWorkflow(AbstractWorkflow):
 		# General preprocessing
 		data = super().preprocess(data)
 		# TODO: Add dataset-specific preprocessing steps here.
+
+		# Get mapping dict using the metadata
+		self.mapping_dict = get_mapping_from_metadata_nako(self.metadata)
+		# Replace Missing, unknown not valid data with nans
+		self.data = filter_data_by_mapping_dict_nako(self.data, self.mapping_dict)
 
 		########################################################
 		####### use WHO definition regarding sa_ogtt to ########
