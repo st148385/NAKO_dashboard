@@ -1,5 +1,10 @@
+import math
+
 import gin
 import polars as pl
+
+from data.utils.constants import IGNORE_VALUE
+from data.utils.preprocessing_utils import filter_data_by_mapping_dict, get_mapping_from_metadata
 
 from .abstractworkflow import AbstractWorkflow
 
@@ -8,8 +13,14 @@ from .abstractworkflow import AbstractWorkflow
 def classify_diabtes_severity(row):
 	sa_ogtt0, sa_ogtt2 = row["sa_ogtt0"], row["sa_ogtt2"]
 
-	if sa_ogtt0 is None or sa_ogtt2 is None:
-		return None  # Handle None values appropriately, you can choose to return a specific class or None
+	# Due to remapping some values are "nan"
+	if (
+		sa_ogtt0 is None
+		or (isinstance(sa_ogtt0, float) and math.isnan(sa_ogtt0))
+		or sa_ogtt2 is None
+		or (isinstance(sa_ogtt2, float) and math.isnan(sa_ogtt2))
+	):
+		return IGNORE_VALUE
 	if sa_ogtt0 >= 7 or sa_ogtt2 >= 11.1:
 		return 0  # Class 0
 	elif 6.1 <= sa_ogtt0 < 7:
@@ -46,6 +57,11 @@ class Diabetes13kWorkflow(AbstractWorkflow):
 		"""
 		super().__init__(**kwargs)
 
+		# Get mapping dict using the metadata
+		self.mapping_dict = get_mapping_from_metadata(self.metadata)
+		# Replace Missing, unknown not valid data with nans
+		self.data = filter_data_by_mapping_dict(self.data, self.mapping_dict)
+
 	def preprocess(self, data):
 		"""
 		Preprocesses the Diabetes13k dataset.
@@ -72,9 +88,14 @@ class Diabetes13kWorkflow(AbstractWorkflow):
 			.apply(lambda row: classify_diabtes_severity(row))
 			.alias("diabetes_class")
 		)
+		# Artifically add clas and update the preprocess_basis
+		# otherwise the class will be removed by _filter_by_config
+		# Since it is not in there...
+		self._preprocess_basis.update({"diabetes_class": None})
 		########################################################
 
 		# The manually choosen stuff will be done here then.
+
 		# TODO might need to rethink this, if artifcially adding stuff here
 		# this won't appear in the original config.
 

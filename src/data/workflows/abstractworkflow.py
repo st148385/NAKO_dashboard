@@ -61,7 +61,7 @@ class AbstractWorkflow(ABC):
 		self.metadata = read_data_with_polars(
 			data_paths.pop("metadata_path"),
 			separator=";",
-			encoding="latin1",
+			encoding="utf-8",
 			infer_schema_length=0,
 			truncate_ragged_lines=True,
 		)

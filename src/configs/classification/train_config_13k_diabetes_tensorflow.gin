@@ -8,17 +8,17 @@ include "configs/__base__/13k_diabetes_base_config.gin"
 ####################################################
 
 # Specify Workflow/Preprocess Configuration
-WorkflowFactory.preprocess_basis = {
-    "basis_age": None,
-    "basis_sex": None,
-    'sa_ogtt0': %TRANSFORMS.DROP,
-    'sa_ogtt2': %TRANSFORMS.DROP,
-    'hgr_lh3_kraft': None,
-    'hgr_rh1_kraft': None,
-    'hgr_rh2_kraft': None,
-    'hgr_rh3_kraft': None,
-    "diabetes_class": None
-}
+# WorkflowFactory.preprocess_basis = {
+#     "basis_age": None,
+#     "basis_sex": None,
+#     'sa_ogtt0': %TRANSFORMS.DROP,
+#     'sa_ogtt2': %TRANSFORMS.DROP,
+#     'hgr_lh3_kraft': None,
+#     'hgr_rh1_kraft': None,
+#     'hgr_rh2_kraft': None,
+#     'hgr_rh3_kraft': None,
+#     "diabetes_class": None
+# }
 # -----------------------------------------------------------------------
 
 ####################################################
