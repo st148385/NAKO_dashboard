@@ -6,7 +6,7 @@ from typing import Any, Dict
 import gin
 import polars as pl
 from transformations import TRANSFORMS, TRANSFORMS_DICT
-from utils.constants import DATA_PATH, METADATA_PATH
+from utils.constants import DATA_PATH, IGNORE_VALUE, INPUT_ROOT, INPUTS, METADATA_PATH, OPTIONAL_INPUTS, OUTPUT_ROOT
 
 
 @gin.configurable
@@ -149,16 +149,56 @@ class AbstractWorkflow(ABC):
 
 	@staticmethod
 	def _validate_paths(path_collection: Dict[str, str]) -> None:
-		"""Validates that the required paths exist and are files."""
+		"""Validates that the required paths exist and are accessible."""
 
-		check_keys = {METADATA_PATH, DATA_PATH}
-		target_keys = set(path_collection.keys())
+		# Check for missing required keys in nested dictionaries
+		if not {METADATA_PATH, DATA_PATH}.issubset(path_collection[INPUTS].keys()):
+			missing_keys = {METADATA_PATH, DATA_PATH} - set(path_collection[INPUTS].keys())
+			raise KeyError(f"Required keys missing in {INPUTS}: {missing_keys}")
 
-		if not check_keys.issubset(target_keys):
-			raise KeyError(f"Keys: {check_keys} not in {target_keys}")
+		# Check if input root exists
+		input_root = Path(path_collection[INPUT_ROOT])
+		if not input_root.exists():
+			raise FileNotFoundError(f"Input root directory not found: {input_root}")
 
-		# Validate if input paths are right
-		for data_type, path in path_collection.items():
-			path = Path(path)
+		# Validate paths within INPUTS (mandatory)
+		for key, rel_path in path_collection[INPUTS].items():
+			path = input_root / rel_path
 			if not path.is_file():
-				raise FileNotFoundError(f"{data_type} not found at {path}")
+				raise FileNotFoundError(f"File not found for {key}: {path}")
+
+		# Validate paths within OPTIONAL_INPUTS (if present)
+		if OPTIONAL_INPUTS in path_collection:
+			for key, rel_path in path_collection[OPTIONAL_INPUTS].items():
+				path = input_root / rel_path
+				if not path.is_file():
+					logging.warning(f"Optional file not found for {key}: {path}. Skipping...")
+
+		# Validate OUTPUT_ROOT (if present)
+		if OUTPUT_ROOT in path_collection:
+			output_root = Path(path_collection[OUTPUT_ROOT])
+			if not output_root.exists():
+				output_root.mkdir(parents=True, exist_ok=True)  # Create if doesn't exist
+			elif not output_root.is_dir():
+				raise NotADirectoryError(f"{OUTPUT_ROOT} is not a directory: {output_root}")
+
+	@staticmethod
+	def save_to_csv(path: Path, df: pl.DataFrame, overwrite=False) -> None:
+		"""
+		Saves a Polars DataFrame to a CSV file.
+
+		Args:
+		    path (Path): The path to the output CSV file.
+		    df (pl.DataFrame): The Polars DataFrame to save.
+		    overwrite (bool): Whether to overwrite the file if it exists. Default is False.
+		"""
+		if path.exists() and not overwrite:
+			raise FileExistsError(f"File '{path}' already exists. Use 'overwrite=True' to overwrite.")
+
+		# Create parent directories if necessary
+		path.parent.mkdir(parents=True, exist_ok=True)
+
+		# Use `write_csv` with sensible defaults and optional compression
+		df.write_csv(path, separator=",", has_header=True)
+
+		logging.info(f"Saved DataFrame to '{path}'")

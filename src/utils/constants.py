@@ -1,11 +1,14 @@
-import enum
-
 import gin
 
-# DATAPATH SPECIFIC CONSTANTS
+###### DATAPATH SPECIFIC CONSTANTS
+## ROOT paths
+INPUT_ROOT = "input_root"
+OUTPUT_ROOT = "output_root"
+# INPUT KEYS
+INPUTS = "inputs"
+OPTIONAL_INPUTS = "optional_inputs"
 METADATA_PATH = "metadata_path"
 DATA_PATH = "data_path"
-OUTPUT_DIR_PATH = "output_dir_path"
 
 
 # IGNORE VAL

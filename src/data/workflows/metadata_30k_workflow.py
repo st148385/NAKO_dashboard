@@ -1,7 +1,8 @@
 import logging
+from pathlib import Path
 
 import gin
-from utils.constants import DATA_PATH, IGNORE_VALUE, METADATA_PATH, OUTPUT_DIR_PATH
+from utils.constants import DATA_PATH, IGNORE_VALUE, INPUT_ROOT, INPUTS, METADATA_PATH, OPTIONAL_INPUTS, OUTPUT_ROOT
 from utils.reading import read_data_with_polars
 
 from .abstractworkflow import AbstractWorkflow
@@ -26,23 +27,22 @@ class Metadata30kWorkflow(AbstractWorkflow):
 		"""
 		super().__init__(**kwargs)
 
-		# Load metadata and main data
-		self.metadata = read_data_with_polars(
-			self.path_collection[METADATA_PATH],
-			separator=";",
-			encoding="utf-8",
-			infer_schema_length=0,
-			truncate_ragged_lines=True,
-		)
-		self.data = read_data_with_polars(self.path_collection[DATA_PATH], separator=";", encoding="latin1")
+		# Use pathlib for cleaner path handling
+		metadata_path = Path(self.path_collection[INPUT_ROOT]) / self.path_collection[INPUTS][METADATA_PATH]
+		data_path = Path(self.path_collection[INPUT_ROOT]) / self.path_collection[INPUTS][DATA_PATH]
+		self.output_dir = Path(self.path_collection.get(OUTPUT_ROOT, "."))  # Default to current dir if not provided
 
-		# Merge additional data (if any)
-		for data_name, data_path in self.path_collection.items():
-			if data_name in {DATA_PATH, METADATA_PATH}:
-				continue
+		self.metadata = read_data_with_polars(
+			metadata_path, separator=";", encoding="utf-8", infer_schema_length=0, truncate_ragged_lines=True
+		)
+		self.data = read_data_with_polars(data_path, separator=";", encoding="latin1")
+
+		# Merge additional data (pathlib handling)
+		for data_name, rel_path in self.path_collection.get(OPTIONAL_INPUTS, {}).items():
 			logging.info(f"Merging '{data_name}' data...")
+			data_path = Path(self.path_collection[INPUT_ROOT]) / rel_path
 			additional_data = read_data_with_polars(data_path, separator=";", encoding="latin1")
-			self.data = self.data.join(additional_data, on="ID", how="left")  # Assuming "ID" is the join key
+			self.data = self.data.join(additional_data, on="ID", how="left")
 
 	def preprocess(self, data):
 		"""
@@ -94,3 +94,18 @@ class Metadata30kWorkflow(AbstractWorkflow):
 		"""
 		super().postprocess(data)
 		return data
+
+	def run(self):
+		super().run()
+
+		# Save the data optionally if output dir is given
+		if OUTPUT_ROOT in self.path_collection:
+			output_root = Path(self.path_collection[OUTPUT_ROOT])
+			input_root = Path(self.path_collection[INPUT_ROOT])
+
+			for path_key, key in zip([DATA_PATH, METADATA_PATH], ["data", "metadata"]):
+				rel_path = input_root / self.path_collection[INPUTS][path_key]
+				output_path = output_root / rel_path.relative_to(input_root)
+				self.save_to_csv(output_path, getattr(self, key.lower()), overwrite=True)
+
+		return self.data
