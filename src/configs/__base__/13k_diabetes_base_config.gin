@@ -14,16 +14,6 @@ WorkflowFactory.data_paths = {
     }
 
 WorkflowFactory.preprocess_basis = {
-    '0': None,
-    '0_right': None,
-    '1': None,
-    '1_right': None,
-    '2': None,
-    '2_right': None,
-    '3': None,
-    '3_right': None,
-    '4': None,
-    '4_right': None,
     'BD01': None,
     'BD02': None,
     'BD035': None,
@@ -50,13 +40,21 @@ WorkflowFactory.preprocess_basis = {
     'ID': None,
     'SE01': None,
     'SE02': None,
+    'Vol_Add_l': None,
     'Vol_Add_l (mm^3)': None,
+    'Vol_Add_r': None,
     'Vol_Add_r (mm^3)': None,
+    'Vol_Ext_l': None,
     'Vol_Ext_l (mm^3)': None,
+    'Vol_Ext_r': None,
     'Vol_Ext_r (mm^3)': None,
+    'Vol_Glu_l': None,
     'Vol_Glu_l (mm^3)': None,
+    'Vol_Glu_r': None,
     'Vol_Glu_r (mm^3)': None,
+    'Vol_Pso_l': None,
     'Vol_Pso_l (mm^3)': None,
+    'Vol_Pso_r': None,
     'Vol_Pso_r (mm^3)': None,
     'a_an_metdm1_age': None,
     'a_ethn1': None,
@@ -195,7 +193,7 @@ WorkflowFactory.preprocess_basis = {
     'ws_rh_innenrotation': None,
     'ws_rk_extension': None,
     'ws_rk_flexion': None
- }
+    }
 
 ##################
 

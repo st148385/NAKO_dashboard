@@ -14,16 +14,6 @@ WorkflowFactory.data_paths = {
     }
 
 WorkflowFactory.preprocess_basis = {
-    '0': [%TRANSFORMS.MIN_MAX_NORM, %TRANSFORMS.DROP],
-    '0_right': None,
-    '1': None,
-    '1_right': None,
-    '2': None,
-    '2_right': None,
-    '3': None,
-    '3_right': None,
-    '4': None,
-    '4_right': None,
     'BD01': None,
     'BD02': None,
     'BD035': None,
@@ -51,13 +41,21 @@ WorkflowFactory.preprocess_basis = {
     'ID': None,
     'SE01': None,
     'SE02': None,
+    'Vol_Add_l': None,
     'Vol_Add_l (mm^3)': None,
+    'Vol_Add_r': None,
     'Vol_Add_r (mm^3)': None,
+    'Vol_Ext_l': None,
     'Vol_Ext_l (mm^3)': None,
+    'Vol_Ext_r': None,
     'Vol_Ext_r (mm^3)': None,
+    'Vol_Glu_l': None,
     'Vol_Glu_l (mm^3)': None,
+    'Vol_Glu_r': None,
     'Vol_Glu_r (mm^3)': None,
+    'Vol_Pso_l': None,
     'Vol_Pso_l (mm^3)': None,
+    'Vol_Pso_r': None,
     'Vol_Pso_r (mm^3)': None,
     'akzel_rueck_hand': None,
     'anthro_ethn1': None,
@@ -337,8 +335,7 @@ WorkflowFactory.preprocess_basis = {
     'ws_rk_ruheschmerz': None,
     'ws_rk_smaxext': None,
     'ws_rk_smaxflex': None
-    }
-
+ }
 ##################
 
 

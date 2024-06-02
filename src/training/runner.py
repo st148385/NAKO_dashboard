@@ -7,6 +7,7 @@ import tensorflow as tf
 import wandb
 from data.dataloaders import ScikitLearnDataloader, TensorflowDataloader
 from rich.progress import Progress
+from tf_explain.core import IntegratedGradients
 from utils.utils_misc import gin_config_to_readable_dictionary, log_dict
 
 

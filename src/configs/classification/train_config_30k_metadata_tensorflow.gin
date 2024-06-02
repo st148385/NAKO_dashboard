@@ -8,11 +8,11 @@ include "configs/__base__/30k_metadata_base_config.gin"
 ####################################################
 
 # Specify Workflow/Preprocess Configuration
-WorkflowFactory.preprocess_basis = {
-    "basis_age": None,
-    "basis_sex": None,
-    "BD02": None,
-}
+# WorkflowFactory.preprocess_basis = {
+#     "basis_age": None,
+#     "basis_sex": None,
+#     "BD02": None,
+# }
 # -----------------------------------------------------------------------
 
 ####################################################
