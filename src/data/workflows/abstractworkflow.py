@@ -199,6 +199,6 @@ class AbstractWorkflow(ABC):
 		path.parent.mkdir(parents=True, exist_ok=True)
 
 		# Use `write_csv` with sensible defaults and optional compression
-		df.write_csv(path, separator=",", has_header=True)
+		df.write_csv(path, separator=";", has_header=True)
 
 		logging.info(f"Saved DataFrame to '{path}'")
