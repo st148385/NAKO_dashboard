@@ -166,5 +166,5 @@ class Runner:
 
 		# Log to wandb if logged in successfully
 		if self.wandb_api_key:
-			wandb.init(project="Research-thesis", config=self.config_dict)
+			wandb.init(project="Research-thesis", config=self.ds_info)
 			wandb.config.update(self.ds_info)
