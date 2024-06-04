@@ -160,7 +160,9 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
 		# ---------------- GROUPBY CORRELATION ---------------------------- #
 
-		groupby_feature_list = [feat for feat, feat_info in feature_dict.items() if feat_info["nominal/ordinal"]]
+		groupby_feature_list = [
+			feat for feat, feat_info in feature_dict.items() if feat_info["type"] in {"binary", "nominal", "ordinal"}
+		]
 		groupby_options = st.multiselect(
 			"How do you want to group the data",
 			groupby_feature_list,
