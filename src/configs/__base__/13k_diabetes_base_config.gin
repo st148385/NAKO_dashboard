@@ -4,6 +4,24 @@ import utils
 # Base Workflow settings
 WorkflowFactory.workflow_name = "Diabetes13kWorkflow"
 WorkflowFactory.path_collection = {
+    %INPUT_ROOT: "/home/artur/Desktop/FA/data/NAKO_tabular/",
+    %INPUTS: {
+        %METADATA_PATH: "13k_diabetes/NAKO_536_61223_export_baseln_MRT_PSN_wie_194_Metadaten.csv",
+        %DATA_PATH: "13k_diabetes/NAKO_536_61223_export_baseln_MRT_PSN_wie_194.csv",
+    },
+    # Optionally add additional data
+    %OPTIONAL_INPUTS: {
+        "Fat_fraction_data_path": "MRI_Vol_CSA_FF/Fat_Fractions.csv",
+        "CSA_GluPso_data_path": "MRI_Vol_CSA_FF/CSA_GluPso_real.csv",
+        "CSA_Thigh_real_data_path": "MRI_Vol_CSA_FF/CSA_Thigh_real.csv",
+        "Volumes_GluPso_data_path": "MRI_Vol_CSA_FF/volumes_GluPso_real.csv",
+        "Volumes_Thigh_real_data_path": "MRI_Vol_CSA_FF/volumes_Thigh_real.csv",
+    },
+    # optionally add  output root. Workflows are going to save the modfied data then there.
+    %OUTPUT_ROOT: "/home/artur/Desktop/FA/data/NAKO_tabular/13k_processed",
+    }
+
+WorkflowFactory.feature_info = {
 	"BD01": {"dtype": "int", "transforms": [None], "type": "numeric"},
 	"BD02": {"dtype": "int", "transforms": [None], "type": "numeric"},
 	"BD035": {"dtype": "int", "transforms": [None], "type": "numeric"},
@@ -171,7 +189,6 @@ WorkflowFactory.path_collection = {
 	"ws_rk_extension": {"dtype": "int", "transforms": [None], "type": "numeric"},
 	"ws_rk_flexion": {"dtype": "int", "transforms": [None], "type": "numeric"},
 }
-
 
 ##################
 
