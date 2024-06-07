@@ -1,30 +1,26 @@
 from typing import Any, Dict
-
 import gin
-
-from .scikit_learn_model_zoo import DummyModelScikitLearn
-from .tensorflow_model_zoo import DummyModelTensorflow
+from .scikitlearn.scikitlearn_dummy_model import DummyModelScikitLearn
+from .tensorflow.tensorflow_dummy_model import DummyModelTensorflow
 
 
 @gin.configurable
 class ModelFactory:
-	"""Factory class for creating workflow instances based on configuration."""
+    """Factory class for creating model instances based on configuration."""
 
-	def __init__(self, model_name: str, ds_info: Dict[str, Any], **kwargs):
-		"""
-		Args:
-			workflow_name: The name of the workflow class to instantiate.
-			**kwargs: Additional keyword arguments to pass to the workflow constructor.
-		"""
+    _model_classes = {
+        "DummyModelScikitLearn": DummyModelScikitLearn,
+        "DummyModelTensorflow": DummyModelTensorflow,
+    }
 
-		assert ds_info, f"ds_info must be provided. Not {ds_info}. Check your dataloader."
-
-		self._model_classes = {
-			"DummyModelScikitLearn": DummyModelScikitLearn,
-			"DummyModelTensorflow": DummyModelTensorflow,
-		}
-
-		model_class = self._model_classes.get(model_name)
-		assert model_class, f"Invalid workflow name: {model_name}"
-
-		self.model = model_class(ds_info=ds_info, **kwargs)
+    def __init__(self, model_name: str, ds_info: Dict[str, Any], **kwargs):
+        """
+        Args:
+            model_name: The name of the model class to instantiate.
+            ds_info: Dataset information necessary for model.
+            **kwargs: Additional keyword arguments to pass to the model constructor.
+        """
+        assert ds_info, f"ds_info must be provided. Not {ds_info}. Check your dataloader."
+        model_class = self._model_classes.get(model_name)
+        assert model_class, f"Invalid model name: {model_name}"
+        self.model = model_class(ds_info=ds_info, **kwargs)

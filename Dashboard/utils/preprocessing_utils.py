@@ -309,21 +309,21 @@ def extract_dataset_information(
 
 		if str in unique_types:
 			feature_dict[feat].update({"dtype": str, "type": "nominal"})
-			temp_dict[feat].update({"dtype": str, "type": "nominal"})
+			temp_dict[feat].update({"dtype": "str", "type": "nominal"})
 		elif np.issubdtype(filtered_data[feat].dtype, np.integer):
 			feature_dict[feat].update({"dtype": int, "type": "numeric"})
-			temp_dict[feat].update({"dtype": int, "type": "numeric"})
+			temp_dict[feat].update({"dtype": "int", "type": "numeric"})
 		elif np.issubdtype(filtered_data[feat].dtype, float):
 			# Check if the float data is actually integer data
 			if np.array_equal(filtered_data[feat].dropna(), filtered_data[feat].dropna().astype(int)):
 				feature_dict[feat].update({"dtype": int, "type": "numeric"})
-				temp_dict[feat].update({"dtype": int, "type": "numeric"})
+				temp_dict[feat].update({"dtype": "int", "type": "numeric"})
 			else:
 				feature_dict[feat].update({"dtype": float, "type": "numeric"})
-				temp_dict[feat].update({"dtype": float, "type": "numeric"})
+				temp_dict[feat].update({"dtype": "float", "type": "numeric"})
 		else:
 			feature_dict[feat].update({"dtype": str, "type": "nominal"})
-			temp_dict[feat].update({"dtype": str, "type": "nominal"})
+			temp_dict[feat].update({"dtype": "str", "type": "nominal"})
 
 		if feature_dict[feat]["dtype"] == int:
 			temp_mapping_dict = {identity: identity for identity in filtered_data[feat].dropna()}
