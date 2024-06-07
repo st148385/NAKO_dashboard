@@ -8,7 +8,7 @@ include "configs/__base__/13k_diabetes_base_config.gin"
 ####################################################
 
 # Specify Workflow/Preprocess Configuration
-# WorkflowFactory.preprocess_basis = {
+# WorkflowFactory.feature_info = {
 #     "basis_age": None,
 #     "basis_sex": None,
 #     'sa_ogtt0': %TRANSFORMS.DROP,
