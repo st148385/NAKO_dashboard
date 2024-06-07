@@ -1,3 +1,3 @@
 from .model_factory import ModelFactory
-from .scikit_learn_model_zoo import DummyModelScikitLearn
-from .tensorflow_model_zoo import DummyModelTensorflow
+from .scikitlearn.scikitlearn_dummy_model import DummyModelScikitLearn
+from .tensorflow.tensorflow_dummy_model import DummyModelTensorflow

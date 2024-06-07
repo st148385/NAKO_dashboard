@@ -32,37 +32,37 @@ class AbstractWorkflow(ABC):
 
 	:param path_collection: A dictionary mapping data types to file paths. Must include keys "metadata_path" and "data_path".
 	:type path_collection: Dict[str, str]
-	:param preprocess_basis: A dictionary specifying preprocessing operations for each feature.
-	:type preprocess_basis: Dict[str, str], optional
+	:param feature_info: A dictionary specifying preprocessing operations for each feature.
+	:type feature_info: Dict[str, str], optional
 
 	"""
 
 	def __init__(
 		self,
 		path_collection: Dict[str, str],
-		preprocess_basis: Dict[str, str] = None,
+		feature_info: Dict[str, str] = None,
 	):
 		"""
 		Initializes the abstract workflow.
 
 		:param path_collection: A dictionary mapping data types to file paths.
 		:type path_collection: Dict[str, str]
-		:param preprocess_basis: A dictionary specifying preprocessing operations for each feature.
-		:type preprocess_basis: Dict[str, str], optional
+		:param feature_info: A dictionary specifying preprocessing operations for each feature.
+		:type feature_info: Dict[str, str], optional
 		:raises KeyError: If required data paths ("metadata_path" or "data_path") are missing.
 		:raises FileNotFoundError: If any specified data file is not found.
 
 		"""
 		self._validate_paths(path_collection)
 		self.path_collection = path_collection
-		self._preprocess_basis = preprocess_basis
+		self._feature_info = feature_info
 
 	def _filter_by_config(self, data: pl.DataFrame) -> pl.DataFrame:
 		"""
 		This method defines a general preprocessing strategy applied to all datasets.
-		It iterates over features and transformations specified in the `preprocess_basis` dictionary,
+		It iterates over features and transformations specified in the `feature_info` dictionary,
 		applying transformations from the `TRANSFORMS` enum to each column as needed. It also logs and
-		drops features not explicitly listed in the `preprocess_basis`.
+		drops features not explicitly listed in the `feature_info`.
 
 		:param data: The data to preprocess.
 		:type data: pl.DataFrame
@@ -71,9 +71,11 @@ class AbstractWorkflow(ABC):
 		:raises ValueError: If an invalid transformation is specified for a column.
 		"""
 		not_listed_features = data.columns
-		for column, transform_list in self._preprocess_basis.items():  # Now using enum values
+		for column, feature_info in self._feature_info.items():  # Now using enum values
 			if column in not_listed_features:
 				not_listed_features.remove(column)
+			print(column, feature_info)
+			transform_list = feature_info["transforms"]
 			if not isinstance(transform_list, list):
 				transform_list = [transform_list]
 			if transform_list[0] is None:

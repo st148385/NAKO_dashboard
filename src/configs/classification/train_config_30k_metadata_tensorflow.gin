@@ -8,10 +8,44 @@ include "configs/__base__/30k_metadata_base_config.gin"
 ####################################################
 
 # Specify Workflow/Preprocess Configuration
-# WorkflowFactory.preprocess_basis = {
-#     "basis_age": None,
-#     "basis_sex": None,
-#     "BD02": None,
+# WorkflowFactory.feature_info = {
+# 	"BD01": {"dtype": "int", "transforms": [None], "type": "numeric"},
+# 	"BD02": {"dtype": "int", "transforms": [None], "type": "numeric"},
+# 	"Vol_Glu_l (mm^3)": {"dtype": "float", "transforms": [None], "type": "numeric"},
+# 	"Vol_Glu_r (mm^3)": {"dtype": "float", "transforms": [None], "type": "numeric"},
+# 	"Vol_Pso_l (mm^3)": {"dtype": "float", "transforms": [None], "type": "numeric"},
+# 	"Vol_Pso_r (mm^3)": {"dtype": "float", "transforms": [None], "type": "numeric"},
+# 	"akzel_rueck_hand": {"dtype": "str", "transforms": [None], "type": "nominal"},
+# 	"anthro_ethn1": {"dtype": "int", "transforms": [None], "type": "ordinal"},
+
+# 	"anthro_resistanz": {"dtype": "float", "transforms": [None], "type": "numeric"},
+# 	"anthro_taillenumfang": {"dtype": "float", "transforms": [None], "type": "numeric"},
+# 	"basis_age": {"dtype": "int", "transforms": [None], "type": "numeric"},
+# 	"basis_sex": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"basis_status_mrt": {"dtype": "int", "transforms": [None], "type": "ordinal"},
+# 	"basis_uort": {"dtype": "int", "transforms": [None], "type": "ordinal"},
+
+# 	"d_an_ca3_f": {"dtype": "int", "transforms": [None], "type": "ordinal"},
+
+# 	"d_an_cv_6": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_ge_3": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_ge_5": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_gezir1_a": {"dtype": "int", "transforms": [None], "type": "numeric"},
+# 	"d_an_lungasth1_a": {"dtype": "int", "transforms": [None], "type": "numeric"},
+# 	"d_an_lungasth2": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_lungcopd1_a": {"dtype": "int", "transforms": [None], "type": "numeric"},
+# 	"d_an_lungcopd2": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_met_1": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_met_2": {"dtype": "int", "transforms": [None], "type": "binary"},
+
+# 	"d_an_metdm2c_6": {"dtype": "int", "transforms": [None], "type": "binary"},
+
+# 	"d_an_msart_3": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_msart_4": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_msback1": {"dtype": "int", "transforms": [None], "type": "ordinal"},
+# 	"d_an_msost1_a": {"dtype": "int", "transforms": [None], "type": "numeric"},
+# 	"d_an_msost2": {"dtype": "int", "transforms": [None], "type": "binary"},
+# 	"d_an_neph": {"dtype": "int", "transforms": [None], "type": "binary"},
 # }
 # -----------------------------------------------------------------------
 

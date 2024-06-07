@@ -5,3 +5,5 @@
     streamlit
     seaborn
     statsmodels
+    beautifulsoup4
+    plotly

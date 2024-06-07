@@ -173,7 +173,9 @@ def get_iqr_filtered_data(data: pd.DataFrame, feature_dict: Dict[str, str]) -> p
 	# Filter Data using IQR method. Since i don't know the unterlying distributions i#m not using Zscore
 	# ONLY the data which is not tagged as nominal will be filtered
 	# it does not make sense to filter basis_uort in such a way.
-	selected_features = [feat for feat, feat_info in feature_dict.items() if not feat_info["nominal/ordinal"]]
+	selected_features = [
+		feat for feat, feat_info in feature_dict.items() if feat_info["type"] not in {"nominal", "binary", "ordinal"}
+	]
 	sub_df = data[selected_features]
 	Q1 = sub_df.quantile(0.25)
 	Q3 = sub_df.quantile(0.75)
@@ -270,15 +272,17 @@ def extract_dataset_information(
 	html_path: Union[str, Path],
 	dataset_name: str,
 ) -> Dict[str, Any]:
-	"""Extract feature specific information and store them in some dictionary
+	"""Extract feature-specific information and store them in a dictionary.
 
-	:param data: original dataframe
+	:param data: Original dataframe
 	:type data: pd.DataFrame
-	:param metadata: original metadataframe
+	:param metadata: Original metadataframe
 	:type metadata: pd.DataFrame
-	:param html_soup: original html soup
-	:type html_soup: BeautifulSoup
-	:return: dict with feature specific information
+	:param html_path: Path to the HTML file
+	:type html_path: Union[str, Path]
+	:param dataset_name: Name of the dataset
+	:type dataset_name: str
+	:return: Dictionary with feature-specific information
 	:rtype: Dict[str, Any]
 	"""
 	# Init feature dict
@@ -293,41 +297,52 @@ def extract_dataset_information(
 	# Access features in data
 	features = data.columns[1:]
 
+
 	for feat in features:
 		feature_information_text = get_information_text_from_metadata_or_html_soup(feat, metadata, html_soup)
 		feature_dict[feat] = {"info_text": feature_information_text}
 
-		# Check for the datatype
-		if str in filtered_data[feat].apply(type).unique():
-			feature_dict[feat].update({"dtype": str, "nominal/ordinal": True})
-			continue
-		# The data is sometimes not saved as INT even though it is categorical
-		if np.array_equal(filtered_data[feat].copy().dropna(), filtered_data[feat].copy().dropna().astype(int)):
-			feature_dict[feat].update({"dtype": int, "nominal/ordinal": False})
-		else:
-			feature_dict[feat].update({"dtype": float, "nominal/ordinal": False})
+		# Determine the data type
+		unique_types = filtered_data[feat].apply(type).unique()
 
-		# Mapping dict shall also hold identity mappings which are not mentioned in metadata
+		if str in unique_types:
+			feature_dict[feat].update({"dtype": str, "type": "nominal"})
+		elif np.issubdtype(filtered_data[feat].dtype, np.integer):
+			feature_dict[feat].update({"dtype": int, "type": "numeric"})
+		elif np.issubdtype(filtered_data[feat].dtype, float):
+			# Check if the float data is actually integer data
+			if np.array_equal(filtered_data[feat].dropna(), filtered_data[feat].dropna().astype(int)):
+				feature_dict[feat].update({"dtype": int, "type": "numeric"})
+			else:
+				feature_dict[feat].update({"dtype": float, "type": "numeric"})
+		else:
+			feature_dict[feat].update({"dtype": str, "type": "nominal"})
+
 		if feature_dict[feat]["dtype"] == int:
 			temp_mapping_dict = {identity: identity for identity in filtered_data[feat].dropna()}
 			mapping_dict[feat] = temp_mapping_dict | mapping_dict.get(feat, {})
-			# Sort mapping by keys
-			mapping_dict[feat] = {key: mapping_dict.get(feat)[key] for key in sorted(mapping_dict.get(feat, {}))}
+			mapping_dict[feat] = {key: mapping_dict[feat][key] for key in sorted(mapping_dict[feat])}
 
-			# IF the majority of the INTEGER VALUES are identity mappings
-			# THEN the data type is really numerical
-			# ELSE the data type is NOMINAL/ORDINAL
-			identity_count = len([counter for counter, val in mapping_dict[feat].items() if counter == val])
-			mapping_count = len([counter for counter, val in mapping_dict[feat].items() if counter != val])
+			identity_count = len([key for key, val in mapping_dict[feat].items() if key == val])
+			mapping_count = len([key for key, val in mapping_dict[feat].items() if key != val])
 
 			if mapping_count >= identity_count:
-				feature_dict[feat]["nominal/ordinal"] = True
+				feature_dict[feat]["type"] = "ordinal"
 
-	# TODO i have to identify nominal data which shall not be filtered this way.
+			# Check for binary feature
+			unwanted_values = {"keine angabe", "(missing)", "weiß nicht"}
+			valid_values = list(mapping_dict[feat].values())  # Start with all values
+			for unwanted in unwanted_values:
+				valid_values = [v for v in valid_values if unwanted.lower() not in str(v).lower()]
+
+			if len(valid_values) == 2:
+				feature_dict[feat]["type"] = "binary"
+
 	filtered_data = get_iqr_filtered_data(filtered_data, feature_dict)
 	filtered_data, mapping_dict, feature_dict = manually_filter_and_merge_data(
 		filtered_data, mapping_dict, feature_dict, dataset_name
 	)
+
 
 	return feature_dict, filtered_data, mapping_dict
 
