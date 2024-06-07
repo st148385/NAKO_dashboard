@@ -28,6 +28,7 @@ def read_mri_data_from_folder(path: Union[str, Path]) -> pd.DataFrame:
 		csv_files.pop(i) for i, file_path in enumerate(csv_files) if file_path.stem.lower() == "fat_fractions"
 	][0]
 
+	dataframe = None
 	for i, file_path in enumerate(csv_files):
 		if i == 0:
 			dataframe = read_csv_file_cached(file_path, sep=";")
@@ -170,7 +171,7 @@ def get_iqr_filtered_data(data: pd.DataFrame, feature_dict: Dict[str, str]) -> p
 	:rtype: pd.DataFrame
 	"""
 
-	# Filter Data using IQR method. Since i don't know the unterlying distributions i#m not using Zscore
+	# Filter Data using IQR method. Since I don't know the underlying distributions I'm not using Zscore
 	# ONLY the data which is not tagged as nominal will be filtered
 	# it does not make sense to filter basis_uort in such a way.
 	selected_features = [feat for feat, feat_info in feature_dict.items() if not feat_info["nominal/ordinal"]]
@@ -223,8 +224,8 @@ def manually_filter_and_merge_data(
 ) -> pd.DataFrame:
 	"""Filter the data in a manual way.
 
-	E.g. some stuff can be merged and others can be removed.
-	(merge hgl_kraft by getting the mean over all 3 features)
+	- Calculates mean left and right hand strengths from first
+	-
 
 	:param data: dataframe
 	:type data: pd.DataFrame

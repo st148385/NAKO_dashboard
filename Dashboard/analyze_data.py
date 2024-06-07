@@ -2,6 +2,7 @@ import streamlit as st
 from menu import menu
 from utils.constants import DATASETS
 
+
 st.set_page_config(layout="wide")
 
 # Initialize st.session_state.role to None
@@ -9,8 +10,8 @@ if "dataset" not in st.session_state:
 	st.session_state.dataset = None
 
 if "root_dir" not in st.session_state:
-	# st.session_state.root_dir = None
-	st.session_state.root_dir = "/home/artur/Desktop/FA/data/NAKO_tabular/"
+	st.session_state.root_dir = None
+	# st.session_state.root_dir = r"C:\Users\mariu\Downloads\NAKO-536\NAKO_tabular"
 
 # Retrieve the dataset and rootdir from session state
 st.session_state._dataset = st.session_state.dataset

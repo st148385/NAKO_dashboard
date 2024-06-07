@@ -5,7 +5,7 @@
 |               Prof. Dr.-Ing. B. Yang              |
 |![](media/isslogocolor.gif)                        |
 
-# Resarch thesis (S1465)
+# Research thesis (S1465)
 
 # Title of the thesis
 ## Student
