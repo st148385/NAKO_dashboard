@@ -8,17 +8,20 @@ include "configs/__base__/13k_diabetes_base_config.gin"
 ####################################################
 
 # Specify Workflow/Preprocess Configuration
-# WorkflowFactory.feature_info = {
-#     "basis_age": None,
-#     "basis_sex": None,
-#     'sa_ogtt0': %TRANSFORMS.DROP,
-#     'sa_ogtt2': %TRANSFORMS.DROP,
-#     'hgr_lh3_kraft': None,
-#     'hgr_rh1_kraft': None,
-#     'hgr_rh2_kraft': None,
-#     'hgr_rh3_kraft': None,
-#     "diabetes_class": None
-# }
+WorkflowFactory.feature_info = {
+	"BD01": {"dtype": "int", "transforms": [None], "type": "numeric"},
+	"BD02": {"dtype": "int", "transforms": [None], "type": "numeric"},
+
+	"d_usa_vat1": {"dtype": "float", "transforms": [None], "type": "numeric"},
+	"d_usa_vat2": {"dtype": "float", "transforms": [None], "type": "numeric"},
+	"hp_vae_tnkrit1": {"dtype": "int", "transforms": [None], "type": "ordinal"},
+	"hp_vae_tnkrit4": {"dtype": "int", "transforms": [None], "type": "ordinal"},
+	# "ogtt_o2": {"dtype": "int", "transforms": [None], "type": "binary"},
+	# "ogtt_o3": {"dtype": "int", "transforms": [None], "type": "binary"},
+	# "sa_hba1c": {"dtype": "int", "transforms": [None], "type": "numeric"},
+    # "sa_ogtt0": {"dtype": "float", "transforms": [None], "type": "numeric"},
+	# "sa_ogtt2": {"dtype": "float", "transforms": [None], "type": "numeric"},
+}
 # -----------------------------------------------------------------------
 
 ####################################################
