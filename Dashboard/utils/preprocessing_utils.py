@@ -297,33 +297,26 @@ def extract_dataset_information(
 	# Access features in data
 	features = data.columns[1:]
 
-	temp_dict = {}
 
 	for feat in features:
 		feature_information_text = get_information_text_from_metadata_or_html_soup(feat, metadata, html_soup)
 		feature_dict[feat] = {"info_text": feature_information_text}
-		temp_dict[feat] = {"transforms": [None]}
 
 		# Determine the data type
 		unique_types = filtered_data[feat].apply(type).unique()
 
 		if str in unique_types:
 			feature_dict[feat].update({"dtype": str, "type": "nominal"})
-			temp_dict[feat].update({"dtype": "str", "type": "nominal"})
 		elif np.issubdtype(filtered_data[feat].dtype, np.integer):
 			feature_dict[feat].update({"dtype": int, "type": "numeric"})
-			temp_dict[feat].update({"dtype": "int", "type": "numeric"})
 		elif np.issubdtype(filtered_data[feat].dtype, float):
 			# Check if the float data is actually integer data
 			if np.array_equal(filtered_data[feat].dropna(), filtered_data[feat].dropna().astype(int)):
 				feature_dict[feat].update({"dtype": int, "type": "numeric"})
-				temp_dict[feat].update({"dtype": "int", "type": "numeric"})
 			else:
 				feature_dict[feat].update({"dtype": float, "type": "numeric"})
-				temp_dict[feat].update({"dtype": "float", "type": "numeric"})
 		else:
 			feature_dict[feat].update({"dtype": str, "type": "nominal"})
-			temp_dict[feat].update({"dtype": "str", "type": "nominal"})
 
 		if feature_dict[feat]["dtype"] == int:
 			temp_mapping_dict = {identity: identity for identity in filtered_data[feat].dropna()}
@@ -335,7 +328,6 @@ def extract_dataset_information(
 
 			if mapping_count >= identity_count:
 				feature_dict[feat]["type"] = "ordinal"
-				temp_dict[feat]["type"] = "ordinal"
 
 			# Check for binary feature
 			unwanted_values = {"keine angabe", "(missing)", "weiß nicht"}
@@ -345,16 +337,12 @@ def extract_dataset_information(
 
 			if len(valid_values) == 2:
 				feature_dict[feat]["type"] = "binary"
-				temp_dict[feat]["type"] = "binary"
 
 	filtered_data = get_iqr_filtered_data(filtered_data, feature_dict)
 	filtered_data, mapping_dict, feature_dict = manually_filter_and_merge_data(
 		filtered_data, mapping_dict, feature_dict, dataset_name
 	)
 
-	from pprint import pprint
-
-	pprint(temp_dict)
 
 	return feature_dict, filtered_data, mapping_dict
 
