@@ -240,12 +240,6 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                     "I.e., check for and ignore outliers when there aren't representative or use other groups to "
                     "remove any non-representative entries of the subsequent 3D plot.")
 
-        # # old version
-        # height_variable_option_col78 = st.selectbox(
-        #     'Select gender to filter data (chosen gender will be visualized):',
-        #     ("hgr_rh_kraft_mean", 'ff_Glu_right', 'ff_Glu_left', 'anthro_fettmasse')  # TODO Add some options
-        # )
-
         height_variable_option_col78 = st.selectbox(
             "Choose the attribute you wish to get more info about.",
             selectable_cols_list,
