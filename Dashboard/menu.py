@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Union
+import uuid
 
 import pandas as pd
 import streamlit as st
@@ -220,61 +221,16 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
         st.write(filtered_correlation)
 
-        col5, col6 = st.columns(2)
-        """
-		with col5:
-			for groupby in groupby_options:
-				for label, name in mapping_dict.get(groupby, {}).items():
-					st.markdown(name)
+        # col5, col6 = st.columns(2)
 
-					# Get the top 10 correlations and drop the feature itself
-					top_k_corr = pd.DataFrame(
-						correlation.unstack()[feature1_corr]
-						.sort_values(by=label, ascending=False, axis=1, key=abs)
-						.loc[label]
-					).drop(feature1_corr)[:10]
-					top_k_corr.insert(
-						1,
-						"Samples used",
-						[
-							len(
-								filtered_data[filtered_data[[feature1_corr, label]].ne("").all(axis=1)][
-									[feature1_corr, label]
-								].dropna()
-							)
-							for label in top_k_corr.index
-						],
-					)
-					st.write(top_k_corr)
-
-		with col6:
-			for groupby in groupby_options:
-				for label, name in mapping_dict.get(groupby, {}).items():
-					st.markdown(name)
-
-					# Get the top 10 correlations and drop the feature itself
-					top_k_corr = pd.DataFrame(
-						correlation.unstack()[feature2_corr]
-						.sort_values(by=label, ascending=False, axis=1, key=abs)
-						.loc[label]
-					).drop(feature2_corr)[:10]
-
-					top_k_corr.insert(
-						1,
-						"Samples used",
-						[
-							len(
-								filtered_data[filtered_data[[feature2_corr, label]].ne("").all(axis=1)][
-									[feature2_corr, label]
-								].dropna()
-							)
-							for label in top_k_corr.index
-						],
-					)
-
-					st.write(top_k_corr)
-		"""
-
+        # Produce a list of column names that the user can select from in the 3D plot and counts matrix UI containers
+        excluded_cols_for_visualization = ["hgr_rh1_kraft", "hgr_rh2_kraft", "hgr_rh3_kraft",
+                                           "hgr_lh1_kraft", "hgr_lh2_kraft", "hgr_lh3_kraft",
+                                           "further_col_name_string", "further_col_name_string", ]
+        selectable_cols_list = []
+        for i in filtered_data.columns[1:]:
+            if i not in excluded_cols_for_visualization:
+                selectable_cols_list.append(i)
 
         # Title and selectbox for the occurrence matrix matplotlib plots in col7 and col8
         st.markdown("Before plotting a 3D plot "
@@ -284,9 +240,19 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                     "I.e., check for and ignore outliers when there aren't representative or use other groups to "
                     "remove any non-representative entries of the subsequent 3D plot.")
 
+        # # old version
+        # height_variable_option_col78 = st.selectbox(
+        #     'Select gender to filter data (chosen gender will be visualized):',
+        #     ("hgr_rh_kraft_mean", 'ff_Glu_right', 'ff_Glu_left', 'anthro_fettmasse')  # TODO Add some options
+        # )
+
         height_variable_option_col78 = st.selectbox(
-            'Select gender to filter data (chosen gender will be visualized):',
-            ("hgr_rh_kraft_mean", 'ff_Glu_right', 'ff_Glu_left', 'anthro_fettmasse')  # TODO Add some options
+            "Choose the attribute you wish to get more info about.",
+            selectable_cols_list,
+            format_func=lambda
+                height_variable_option_col78: f"[{height_variable_option_col78}] — {feature_dict[height_variable_option_col78]['info_text']}",
+            index=selectable_cols_list.index("hgr_rh_kraft_mean"),  # default selection on startup
+            key="Select_var_for_both_counts_matrices"
         )
 
         height_label_col78 = height_label_naming(height_variable_option_col78)
@@ -296,24 +262,56 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
         with col7_male:
 
             # st.markdown("Num Measurements -- Males")
-            st.markdown("<h1 style='text-align: center; color: grey;'>Num measurements -- Males</h1>",
+            st.markdown("<h1 style='text-align: center; color: grey;'>Num measurements — Males</h1>",
                         unsafe_allow_html=True)
 
             visualized_data_male = filtered_data[filtered_data["basis_sex"] == 1]
 
+            default_age_bins_male = [18, 30, 40, 50, 60, 70, round(visualized_data_male["basis_age"].max())]
+            default_BMI_bins_male = [0, 18.5, 25, 30, 35,
+                                     round(max(visualized_data_male["anthro_gew"] / (
+                                             visualized_data_male["anthro_groe"] / 100) ** 2), 1)]
+
+            age_bins_input_male = st.text_input("Enter age bins (comma-separated):",
+                                                ", ".join(map(str, default_age_bins_male)),
+                                                key="age_bins_male_counts_matrix")
+            BMI_bins_input_male = st.text_input("Enter BMI bins (comma-separated):",
+                                                ", ".join(map(str, default_BMI_bins_male)),
+                                                key="BMI_bins_male_counts_matrix")
+
+            age_bins_male = np.array([float(x.strip()) for x in age_bins_input_male.split(",")])
+            BMI_bins_male = np.array([float(x.strip()) for x in BMI_bins_input_male.split(",")])
+
             fig_male = create_count_matrix(df=visualized_data_male, height_var=height_variable_option_col78,
-                                           streamlit_choose_bins=True)
+                                           streamlit_choose_bins=True, BMI_bins=BMI_bins_male, age_bins=age_bins_male)
             st.pyplot(fig_male)
 
         with col8_female:
 
             # st.markdown("Num measurements -- Females")
-            st.markdown("<h1 style='text-align: center; color: grey;'>Num measurements -- Females</h1>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center; color: grey;'>Num measurements — Females</h1>",
+                        unsafe_allow_html=True)
 
             visualized_data_female = filtered_data[filtered_data["basis_sex"] == 2]
 
+            default_age_bins_female = [18, 30, 40, 50, 60, 70, round(visualized_data_female["basis_age"].max())]
+            default_BMI_bins_female = [0, 18.5, 25, 30, 35,
+                                       round(max(visualized_data_female["anthro_gew"] / (
+                                               visualized_data_female["anthro_groe"] / 100) ** 2), 1)]
+
+            age_bins_input_female = st.text_input("Enter age bins (comma-separated):",
+                                                  ", ".join(map(str, default_age_bins_female)),
+                                                  key="age_bins_female_counts_matrix")
+            BMI_bins_input_female = st.text_input("Enter BMI bins (comma-separated):",
+                                                  ", ".join(map(str, default_BMI_bins_female)),
+                                                  key="BMI_bins_female_counts_matrix")
+
+            age_bins_female = np.array([float(x.strip()) for x in age_bins_input_female.split(",")])
+            BMI_bins_female = np.array([float(x.strip()) for x in BMI_bins_input_female.split(",")])
+
             fig_female = create_count_matrix(df=visualized_data_female, height_var=height_variable_option_col78,
-                                             streamlit_choose_bins=True)
+                                             streamlit_choose_bins=True, age_bins=age_bins_female,
+                                             BMI_bins=BMI_bins_female)
             st.pyplot(fig_female)
 
         col9, col10 = st.columns(2)
@@ -322,8 +320,11 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             st.markdown("3D plot to visualize some variable against age groups and BMI groups")
 
             height_variable_option = st.selectbox(
-                'Select metadata variable to visualize on the height axis:',
-                ("hgr_rh_kraft_mean", 'ff_Glu_right', 'ff_Glu_left', 'anthro_fettmasse'),   # TODO Add some options
+                "Select metadata variable to visualize on the height axis:",
+                selectable_cols_list,
+                format_func=lambda
+                    height_variable_option: f"[{height_variable_option}] — {feature_dict[height_variable_option]['info_text']}",
+                index=selectable_cols_list.index("hgr_rh_kraft_mean"),  # default selection on startup
                 key="Select_height_var_for_left_3D_plot"
             )
 
@@ -343,6 +344,15 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                 key="Select_gender_for_left_3D_plot"
             )
 
+            use_above_groups_left = st.checkbox("Use above $$\\uparrow$$ custom BMI and age groups",
+                                                value=False, key="checkbox_customgrps_left", label_visibility="visible")
+
+            dont_start_3d_plot_from_zero_left = st.checkbox("Start height values from actual measurement results "
+                                                            "instead of zero",
+                                                            value=True,  # default checkbox choice on first startup
+                                                            key="checkbox_3D_plot_height_axis_left",
+                                                            label_visibility="visible")
+
             if gender_option == "Male":
                 visualized_data = filtered_data[filtered_data["basis_sex"] == 1]
             elif gender_option == "Female":
@@ -358,23 +368,32 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
             age = visualized_data["basis_age"]
 
-            height_values = visualized_data[height_variable_option]     # chosen via selectbox() above
+            height_values = visualized_data[height_variable_option]  # chosen via selectbox() above
 
             # Plot the 3D graph with matplotlib:
             # fig = plot_f_of_xy(BMI=BMI, age=age, hand_strength=hand_strength)
             # st.pyplot(fig)
 
             # Plot the data with plotly (for interactivity)
-            fig = create_plotly_f_of_xy(BMI=BMI, age=age, height_var=height_values, height_label=height_label)
+            if use_above_groups_left:
+                fig = create_plotly_f_of_xy(BMI=BMI, age=age, height_var=height_values, height_label=height_label,
+                                            age_bins=age_bins_male, BMI_bins=BMI_bins_male,
+                                            dont_start_from_height_zero=dont_start_3d_plot_from_zero_left)
+            else:
+                fig = create_plotly_f_of_xy(BMI=BMI, age=age, height_var=height_values, height_label=height_label,
+                                            dont_start_from_height_zero=dont_start_3d_plot_from_zero_left)
             st.plotly_chart(fig)
 
-    with col10:     # The following is just a copy&paste of the code for col9 and changed var names to abc2
+    with col10:  # The following is just a copy&paste of the code for col9 and changed var names to abc10
 
         st.markdown("3D plot to visualize some variable against age groups and BMI groups")
 
         height_variable_option_10 = st.selectbox(
-            'Select metadata variable to visualize on the height axis:',
-            ("hgr_rh_kraft_mean", 'ff_Glu_right', 'ff_Glu_left', 'anthro_fettmasse'),  # TODO Add some options
+            "Select metadata variable to visualize on the height axis:",
+            selectable_cols_list,
+            format_func=lambda
+                height_variable_option_10: f"[{height_variable_option_10}] — {feature_dict[height_variable_option_10]['info_text']}",
+            index=selectable_cols_list.index("hgr_rh_kraft_mean"),  # default selection on startup
             key="Select_height_var_for_right_3D_plot"
         )
 
@@ -394,6 +413,15 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             key="Select_gender_for_right_3D_plot"
         )
 
+        use_above_groups_right = st.checkbox("Use above $$\\uparrow$$ custom BMI and age groups",
+                                             value=False, key="checkbox_customgrps_right", label_visibility="visible")
+
+        dont_start_3d_plot_from_zero_right = st.checkbox("Start height values from actual measurement results "
+                                                         "instead of zero",
+                                                         value=True,  # default checkbox choice on first startup
+                                                         key="checkbox_3D_plot_height_axis_right",
+                                                         label_visibility="visible", )
+
         if gender_option_10 == "Male":
             visualized_data = filtered_data[filtered_data["basis_sex"] == 1]
         elif gender_option_10 == "Female":
@@ -412,10 +440,15 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
         height_values_10 = visualized_data[height_variable_option_10]  # chosen via selectbox() above
 
         # Plot the data with plotly (for interactivity)
-        fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values_10,
-                                       height_label=height_label_10)
+        if use_above_groups_right:
+            fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values, height_label=height_label,
+                                           age_bins=age_bins_female, BMI_bins=BMI_bins_female,
+                                           dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
+        else:
+            fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values_10,
+                                           height_label=height_label_10,
+                                           dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
         st.plotly_chart(fig_10)
-
 
     return  # return of "csv_dataset()" -> NO return value!
 

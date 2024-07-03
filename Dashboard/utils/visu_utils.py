@@ -166,6 +166,8 @@ def create_plotly_heatmap(data: pd.DataFrame, cmap: str = "RdBu_r", zmin: float 
 
 def plot_f_of_xy(BMI, age, hand_strength, z_name="default (unit)", elev=20., azim=30, streamlit=True):
     """
+    <<<ATTENTION: CURRENTLY USING THE PLOTLY FUNCTION BELOW INSTEAD OF THIS ONE!!>>>
+
     Plot f(x,y) in a 3D plot. Uncommenting "ax.view_init()" allows to change
     the view angle of the resulting plot (e.g. like panning it).
 
@@ -191,8 +193,8 @@ def plot_f_of_xy(BMI, age, hand_strength, z_name="default (unit)", elev=20., azi
             else:
                 average_hand_strength[i, j] = np.nan  # Handle empty groups
 
-    # Handle NaNs for visualization (optional)
-    avg_hand_strength = np.nan_to_num(average_hand_strength, nan=np.nan)
+    # Handle NaNs for visualization (optional) - currently unused, i.e., NO effect because NaN's are changed to np.nan
+    avg_hand_strength = np.nan_to_num(average_hand_strength, nan=np.nan)    # Change np.nan to any number to use this
 
     # Create a meshgrid for the plot
     BMI_grid, age_grid = np.meshgrid(BMI_bins, age_bins)
@@ -225,18 +227,21 @@ def plot_f_of_xy(BMI, age, hand_strength, z_name="default (unit)", elev=20., azi
     return fig
 
 
-def create_plotly_f_of_xy(BMI, age, height_var, height_label="r-hand strength (kg)", elev=20., azim=30, streamlit=True):
+def create_plotly_f_of_xy(BMI, age, height_var, height_label="r-hand strength (kg)", elev=20., azim=30, streamlit=True,
+                          age_bins=None, BMI_bins=None, dont_start_from_height_zero=True):
     """
     Plot f(x,y) in an interactive 3D plot using plotly.
     Takes np.arrays of x,y and z values, returns a plotly fig to put into st.plotly_chart(fig)
     """
     # Define age and BMI groups
-    # age_bins = np.arange(20, 71, 10)
-    age_bins = np.array([18, 30, 40, 50, 60, max(age)])
-    # BMI_bins = np.arange(18, 36, 10)
-    BMI_bins = np.array([0, 18.5, 25, 30, 35, max(BMI)])
+    if age_bins is None:
+        # age_bins = np.arange(20, 71, 10)
+        age_bins = np.array([18, 30, 40, 50, 60, max(age)])
+    if BMI_bins is None:
+        # BMI_bins = np.arange(18, 36, 10)
+        BMI_bins = np.array([0, 18.5, 25, 30, 35, max(BMI)])
 
-    # Compute the average hand strength for each age and BMI group
+    # Compute the average hand strength (height_var) for each age and BMI group
     age_groups = np.digitize(age, age_bins)
     BMI_groups = np.digitize(BMI, BMI_bins)
     average_hand_strength = np.zeros((len(BMI_bins), len(age_bins)))
@@ -247,13 +252,20 @@ def create_plotly_f_of_xy(BMI, age, height_var, height_label="r-hand strength (k
             if np.any(mask):
                 average_hand_strength[i, j] = np.mean(height_var[mask])
             else:
-                average_hand_strength[i, j] = np.nan  # Handle empty groups
+                average_hand_strength[i, j] = np.nan  # Handle empty groups; can optionally change nans in line below
 
-    # Handle NaNs for visualization (optional)
+    # Handle NaNs for visualization (optional) - currently unused, i.e., NO effect because np.nans are changed to np.nan
     average_hand_strength = np.nan_to_num(average_hand_strength, nan=np.nan)
 
     # Create a meshgrid for the plot
     BMI_grid, age_grid = np.meshgrid(BMI_bins, age_bins)
+
+    # The first column and first row are probably 0 for any height variable. They at least are for hand str and systole
+    # Let's remove the first row and first column of x, y and z to have the 3D plot start from heights != 0
+    if dont_start_from_height_zero is True:
+        age_grid = age_grid[1:, :]   # all columns but not all rows, skip first row (row 0)
+        BMI_grid = BMI_grid[:, 1:]   # all rows but not all columns, skip first column (col 0)
+        average_hand_strength = average_hand_strength[1:, 1:]   # Skip first col AND first row (there only zero entries in those)
 
     # Create a 3D surface plot using Plotly
     fig = go.Figure(data=[go.Surface(z=average_hand_strength.T, x=BMI_grid, y=age_grid, colorscale='Viridis')])
@@ -264,7 +276,9 @@ def create_plotly_f_of_xy(BMI, age, height_var, height_label="r-hand strength (k
         scene=dict(
             xaxis_title='BMI (kg/m²)',
             yaxis_title='Age (years)',
-            zaxis_title=height_label
+            zaxis_title=height_label,
+            # zaxis=dict(nticks=4, range=[np.nanmin(height_var), np.nanmax(height_var)])
+            zaxis=dict(nticks=4, range=[np.nanmin(average_hand_strength), np.nanmax(average_hand_strength)])
         )
     )
 
@@ -311,38 +325,18 @@ def create_count_matrix(df, height_var="PWC130", type="count", age_bins=None, BM
     df_with_fixed_ages = df.loc[(df["basis_age"] > 17) & (df["basis_age"] < df["basis_age"].max())]
     age = df_with_fixed_ages["basis_age"]
 
+    # Choose default bins when the bin arguments were omitted (None) or when streamlit_choose_bins was chosen as False
+    if age_bins is None or streamlit_choose_bins is False:
+        # age_bins = np.array([18, 30, 40, 50, 60, 70, max(age) + .01])
+        age_bins = np.array([18, 30, 40, 50, 60, 70, max(age)])  # Edit: nearly noone is in age group 70-80
+    if BMI_bins is None or streamlit_choose_bins is False:
+        BMI_bins = np.array([0, 18.5, 25, 30, 35, round(max(BMI)) + 1])  # round(max(BMI)) + 1 for rounding up
 
-
-
-    # Define the age and BMI bins
-    if streamlit_choose_bins is True:
-        # Get random keys for streamlit's st.text_input
-        # Use unique key based on UUID
-        import uuid
-        age_bins_key = str(uuid.uuid4())
-        BMI_bins_key = str(uuid.uuid4())
-        # Use Streamlit to allow user input for age and BMI bins
-        if age_bins is None:
-            default_age_bins = np.array([18, 30, 40, 50, 60, 70, max(age) + .01])
-            age_bins = st.text_input("Enter age bins (comma-separated):", ", ".join(map(str, default_age_bins)),
-                                     key=age_bins_key)
-            age_bins = np.array([float(x.strip()) for x in age_bins.split(",")])    # Maybe add "+ 0.01" for final age
-        if BMI_bins is None:
-            default_BMI_bins = np.array([0, 18.5, 25, 30, 35, round(max(BMI)) + 1 + .01])
-            BMI_bins = st.text_input("Enter BMI bins (comma-separated):", ", ".join(map(str, default_BMI_bins)),
-                                     key=BMI_bins_key)
-            BMI_bins = np.array([float(x.strip()) for x in BMI_bins.split(",")])
-    else:
-        # Default hardcoded age_bins and bmi_bins
-        if age_bins is None:
-            # age_bins = np.array([18, 30, 40, 50, 60, 70, max(age) + .01])
-            age_bins = np.array([18, 30, 40, 50, 60, 70, max(age)])  # Edit: nearly noone is in age group 70-80
-        if BMI_bins is None:
-            BMI_bins = np.array([0, 18.5, 25, 30, 35, round(max(BMI)) + 1])  # round(max(BMI)) + 1 for rounding up
-
-    # Adjust the maximum value in the bins to ensure correct binning
-    age_bins[-1] = max(age) + 0.01
-    BMI_bins[-1] = round(max(BMI)) + 0.01
+    # Don't necessarily take the maximum if the user chooses not to do so
+    if streamlit_choose_bins is False:
+        # Adjust the maximum value in the bins to ensure correct binning
+        age_bins[-1] = max(age) + 0.01
+        BMI_bins[-1] = round(max(BMI)) + 0.01
 
     # Digitize the age and BMI columns into bins -> "age_groups" contains the grp indices, each patient is put in
     age_groups = np.digitize(df["basis_age"], age_bins, right=False)
