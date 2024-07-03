@@ -155,8 +155,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 			Different correlation methods. \n
 			Pearson: is the most used one. The computation is quick but 
 			the correlation describes the linear behaviour.\n
-			Spearman: Calculation takes longer due to rank statstics. The correlation describes the monotonicity. \n
-			Kendall: Also rank based correlation. Describes monotocity. \n
+			Spearman: Calculation takes longer due to rank statistics. The correlation describes the monotonicity. \n
+			Kendall: Also rank based correlation. Describes monotonicity. \n
 			TODO: Add Xicorr. The calculation takes longer but it describes the if Y is dependent on X.
 			This correlation might be the most useful one, if the features are non-linearly dependent.
 			""",
@@ -164,14 +164,16 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
         # ---------------- GROUPBY CORRELATION ---------------------------- #
 
-        groupby_feature_list = [feat for feat, feat_info in feature_dict.items() if feat_info["nominal/ordinal"]]
-        groupby_options = st.multiselect(
-            "How do you want to group the data",
-            groupby_feature_list,
-            ["basis_sex"],
-            format_func=lambda option: f"{feature_dict[option]['info_text']} [{option}]",
-            max_selections=MAX_GROUPBY_NUMBER,
-        )
+		groupby_feature_list = [
+			feat for feat, feat_info in feature_dict.items() if feat_info["type"] in {"binary", "nominal", "ordinal"}
+		]
+		groupby_options = st.multiselect(
+			"How do you want to group the data",
+			groupby_feature_list,
+			["basis_sex"],
+			format_func=lambda option: f"{feature_dict[option]['info_text']} [{option}]",
+			max_selections=MAX_GROUPBY_NUMBER,
+		)
 
         # Get the unique values as selecting option dropping nan
         unique_values_per_groupby_option = {
@@ -220,6 +222,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             st.plotly_chart(correlation_heatmap)
 
         st.write(filtered_correlation)
+
 
         # col5, col6 = st.columns(2)
 
@@ -378,73 +381,73 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                                             dont_start_from_height_zero=dont_start_3d_plot_from_zero_left)
             st.plotly_chart(fig)
 
-    with col10:  # The following is just a copy&paste of the code for col9 and changed var names to abc10
+        with col10:  # The following is just a copy&paste of the code for col9 and changed var names to abc10
 
-        st.markdown("3D plot to visualize some variable against age groups and BMI groups")
+            st.markdown("3D plot to visualize some variable against age groups and BMI groups")
 
-        height_variable_option_10 = st.selectbox(
-            "Select metadata variable to visualize on the height axis:",
-            selectable_cols_list,
-            format_func=lambda
-                height_variable_option_10: f"[{height_variable_option_10}] — {feature_dict[height_variable_option_10]['info_text']}",
-            index=selectable_cols_list.index("hgr_rh_kraft_mean"),  # default selection on startup
-            key="Select_height_var_for_right_3D_plot"
-        )
+            height_variable_option_10 = st.selectbox(
+                "Select metadata variable to visualize on the height axis:",
+                selectable_cols_list,
+                format_func=lambda
+                    height_variable_option_10: f"[{height_variable_option_10}] — {feature_dict[height_variable_option_10]['info_text']}",
+                index=selectable_cols_list.index("hgr_rh_kraft_mean"),  # default selection on startup
+                key="Select_height_var_for_right_3D_plot"
+            )
 
-        # Selection box (st.selectbox) to choose the height variable f in the f(age, bmi) 3D plot
-        if height_variable_option_10 == "hgr_rh_kraft_mean":
-            height_label_10 = "right hand strength (kg)"
-        elif "fett" in height_variable_option_10:
-            height_label_10 = f"{height_variable_option_10} (%)"
-        elif "ff" in height_variable_option_10:
-            height_label_10 = f"{height_variable_option_10}"
-        else:
-            height_label_10 = f"{height_variable_option_10} (a.u.)"
+            # Selection box (st.selectbox) to choose the height variable f in the f(age, bmi) 3D plot
+            if height_variable_option_10 == "hgr_rh_kraft_mean":
+                height_label_10 = "right hand strength (kg)"
+            elif "fett" in height_variable_option_10:
+                height_label_10 = f"{height_variable_option_10} (%)"
+            elif "ff" in height_variable_option_10:
+                height_label_10 = f"{height_variable_option_10}"
+            else:
+                height_label_10 = f"{height_variable_option_10} (a.u.)"
 
-        gender_option_10 = st.selectbox(
-            'Select gender to filter data (chosen gender will be visualized):',
-            ('Male', 'Female', 'All'),
-            key="Select_gender_for_right_3D_plot"
-        )
+            gender_option_10 = st.selectbox(
+                'Select gender to filter data (chosen gender will be visualized):',
+                ('Male', 'Female', 'All'),
+                key="Select_gender_for_right_3D_plot"
+            )
 
-        use_above_groups_right = st.checkbox("Use above $$\\uparrow$$ custom BMI and age groups",
-                                             value=False, key="checkbox_customgrps_right", label_visibility="visible")
+            use_above_groups_right = st.checkbox("Use above $$\\uparrow$$ custom BMI and age groups",
+                                                 value=False, key="checkbox_customgrps_right", label_visibility="visible")
 
-        dont_start_3d_plot_from_zero_right = st.checkbox("Start height values from actual measurement results "
-                                                         "instead of zero",
-                                                         value=True,  # default checkbox choice on first startup
-                                                         key="checkbox_3D_plot_height_axis_right",
-                                                         label_visibility="visible", )
+            dont_start_3d_plot_from_zero_right = st.checkbox("Start height values from actual measurement results "
+                                                             "instead of zero",
+                                                             value=True,  # default checkbox choice on first startup
+                                                             key="checkbox_3D_plot_height_axis_right",
+                                                             label_visibility="visible", )
 
-        if gender_option_10 == "Male":
-            visualized_data = filtered_data[filtered_data["basis_sex"] == 1]
-        elif gender_option_10 == "Female":
-            visualized_data = filtered_data[filtered_data["basis_sex"] == 2]
-        elif gender_option_10 == "All":
-            visualized_data = filtered_data
-        else:
-            visualized_data = filtered_data
-            print(f"Chosen gender {gender_option_10} is not allowed!")
+            if gender_option_10 == "Male":
+                visualized_data = filtered_data[filtered_data["basis_sex"] == 1]
+            elif gender_option_10 == "Female":
+                visualized_data = filtered_data[filtered_data["basis_sex"] == 2]
+            elif gender_option_10 == "All":
+                visualized_data = filtered_data
+            else:
+                visualized_data = filtered_data
+                print(f"Chosen gender {gender_option_10} is not allowed!")
 
-        height_squared_10 = (visualized_data["anthro_groe"] / 100) ** 2
-        BMI_10 = visualized_data["anthro_gew"] / height_squared_10
+            height_squared_10 = (visualized_data["anthro_groe"] / 100) ** 2
+            BMI_10 = visualized_data["anthro_gew"] / height_squared_10
 
-        age_10 = visualized_data["basis_age"]
+            age_10 = visualized_data["basis_age"]
 
-        height_values_10 = visualized_data[height_variable_option_10]  # chosen via selectbox() above
+            height_values_10 = visualized_data[height_variable_option_10]  # chosen via selectbox() above
 
-        # Plot the data with plotly (for interactivity)
-        if use_above_groups_right:
-            fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values, height_label=height_label,
-                                           age_bins=age_bins_female, BMI_bins=BMI_bins_female,
-                                           dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
-        else:
-            fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values_10,
-                                           height_label=height_label_10,
-                                           dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
-        st.plotly_chart(fig_10)
+            # Plot the data with plotly (for interactivity)
+            if use_above_groups_right:
+                fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values, height_label=height_label,
+                                               age_bins=age_bins_female, BMI_bins=BMI_bins_female,
+                                               dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
+            else:
+                fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values_10,
+                                               height_label=height_label_10,
+                                               dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
+            st.plotly_chart(fig_10)
 
-    return  # return of "csv_dataset()" -> NO return value!
+        return  # return of "csv_dataset()" -> NO return value!
 
 
 def menu():

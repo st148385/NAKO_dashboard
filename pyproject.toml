@@ -13,10 +13,11 @@ select = [
     # isort
     "I",
 ]
-
+unfixable = ["F401"]
 
 [tool.ruff]
 line-length = 120
+ignore-init-module-imports = true
 
 [tool.ruff.format]
 quote-style = "double"

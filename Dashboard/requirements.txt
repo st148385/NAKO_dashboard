@@ -2,11 +2,8 @@
     numpy
     pandas
     matplotlib
-    sphinx
-    sphinx-rtd-theme
     streamlit
     seaborn
     statsmodels
     beautifulsoup4
     plotly
-    polars

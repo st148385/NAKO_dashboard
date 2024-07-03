@@ -49,31 +49,31 @@ def create_plotly_histogram(
         barmode="overlay",
     )
 
-    fig.update_layout(
-        title={
-            "text": f"{x_axis}-distribution after filtering",
-            "y": 0.9,
-            "x": 0.5,
-            "xanchor": "center",
-            "yanchor": "top",
-        }
-    )
-    if feature_dict.get(x_axis)["nominal/ordinal"]:
-        tick_frequency = TICK_FREQUENCY if len(mapping_dict[x_axis].keys()) > TICK_FREQUENCY else 1
-        fig.update_xaxes(
-            tickvals=[key for i, (key, _) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
-            ticktext=[val for i, (_, val) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
-        )
+	fig.update_layout(
+		title={
+			"text": f"{x_axis}-distribution after filtering",
+			"y": 0.9,
+			"x": 0.5,
+			"xanchor": "center",
+			"yanchor": "top",
+		}
+	)
+	if feature_dict.get(x_axis)["type"] in {"binary", "ordinal", "nominal"}:
+		tick_frequency = TICK_FREQUENCY if len(mapping_dict[x_axis].keys()) > TICK_FREQUENCY else 1
+		fig.update_xaxes(
+			tickvals=[key for i, (key, _) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
+			ticktext=[val for i, (_, val) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
+		)
 
-    # Rename legend
-    if mapping_dict.get(groupby):
-        for label, label_name in mapping_dict.get(groupby).items():
-            fig.update_traces(
-                {"name": label_name.replace("'", "")},
-                selector={"name": str(copy.copy(label))},
-            )
+	# Rename legend
+	if mapping_dict.get(groupby):
+		for label, label_name in mapping_dict.get(groupby).items():
+			fig.update_traces(
+				{"name": str(label_name).replace("'", "")},
+				selector={"name": str(copy.copy(label))},
+			)
 
-    return fig
+	return fig
 
 
 def create_plotly_scatterplot(
@@ -125,28 +125,28 @@ def create_plotly_scatterplot(
         height=800,
     )
 
-    if feature_dict.get(feature1)["nominal/ordinal"]:
-        tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature1].keys()) > TICK_FREQUENCY else 1
-        fig.update_xaxes(
-            tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
-            ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
-        )
+	if feature_dict.get(feature1)["type"] in {"binary", "ordinal", "nominal"}:
+		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature1].keys()) > TICK_FREQUENCY else 1
+		fig.update_xaxes(
+			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
+			ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
+		)
 
-    if feature_dict.get(feature2)["nominal/ordinal"]:
-        tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature2].keys()) > TICK_FREQUENCY else 1
-        fig.update_yaxes(
-            tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
-            ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
-        )
+	if feature_dict.get(feature2)["type"] in {"binary", "ordinal", "nominal"}:
+		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature2].keys()) > TICK_FREQUENCY else 1
+		fig.update_yaxes(
+			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
+			ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
+		)
 
-    if mapping_dict.get(groupby[0]):
-        # Rename legend
-        for label, label_name in mapping_dict.get(groupby[0]).items():
-            fig.update_traces(
-                {"name": label_name.replace("'", "")},
-                selector={"name": str(label)},
-            )
-    return fig
+	if mapping_dict.get(groupby[0]):
+		# Rename legend
+		for label, label_name in mapping_dict.get(groupby[0]).items():
+			fig.update_traces(
+				{"name": str(label_name).replace("'", "")},
+				selector={"name": str(label)},
+			)
+	return fig
 
 
 def create_plotly_heatmap(data: pd.DataFrame, cmap: str = "RdBu_r", zmin: float = -1, zmax: float = 1):
