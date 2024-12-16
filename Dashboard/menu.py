@@ -7,6 +7,7 @@ import streamlit as st
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter
 from scipy.stats import norm
 
 from utils.constants import DATASETS_CSV, MAX_GROUPBY_NUMBER
@@ -186,7 +187,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 # -----------
 
         # New Functionality: Compare Continuous vs Discrete Distributions
-        st.header("Compare Feature Distributions")
+        st.header("Compare distributions of a continuous feature when filtering the IDs by a discrete feature")
         col3, col4 = st.columns(2)
 
         with col3:
@@ -212,7 +213,11 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
             st.markdown(f"### Distribution: {continuous_feature} grouped by {discrete_feature}")
 
-            filtered_data_filtered_again_for_discrete_features = filtered_data[filtered_data[discrete_feature] >= 0]
+            if pd.api.types.is_numeric_dtype(filtered_data[discrete_feature]):
+                filtered_data_filtered_again_for_discrete_features = filtered_data[filtered_data[discrete_feature] >= 0]
+            else:
+                raise ValueError("The selected discrete feature contains strings. Choose another feature or change"
+                                 "the column's content in the code before using it here.")
 
             # Extract palette colors   # a=[1,2]; b=["red", "blue"] -> dict(zip(a,b)) becomes {1: "red", 2: "blue"}
             palette = sns.color_palette("muted", n_colors=len(
@@ -221,7 +226,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             # Create a 'colors' dict with entries {label1: (R1, G1, B1), label2: (R2, G2, B2)}:
             colors = dict(zip(unique_groups, palette))
 
-            fig, ax = plt.subplots(figsize=(10/2, 6/2))
+            fig, ax = plt.subplots(figsize=(6, 4))          # (10, 5)  # (6, 4)
             sns.histplot(
                 data=filtered_data_filtered_again_for_discrete_features,
                 x=continuous_feature,
@@ -232,8 +237,6 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                 palette=palette,   # palette="muted",
                 ax=ax,
             )
-
-            # TODO: These gaussians don't seem correct! Look for an error
 
             # Iterate over unique discrete feature values
             for group in filtered_data_filtered_again_for_discrete_features[discrete_feature].unique():
@@ -253,7 +256,13 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             ax.set_title(f"Distribution of {continuous_feature} by {discrete_feature}")
             ax.set_xlabel(continuous_feature)
             ax.set_ylabel("Count")
-            st.pyplot(fig)
+
+            # Set scientific notation on x-axis
+            ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))  # Force scientific notation
+
+            with st.columns([1,2,1])[1]:
+                st.pyplot(fig, use_container_width=False)
 
 
 # -----------
@@ -596,7 +605,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             else:
                 fig = create_plotly_f_of_xy(BMI=BMI, age=age, height_var=height_values, height_label=height_label,
                                             dont_start_from_height_zero=dont_start_3d_plot_from_zero_left)
-            st.plotly_chart(fig)
+            st.plotly_chart(fig, key="left_3D_plot")
 
         with col10:  # The following is just a copy&paste of the code for col9 and changed var names to abc10
 
@@ -664,7 +673,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                 fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values_10,
                                                height_label=height_label_10,
                                                dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
-            st.plotly_chart(fig_10)
+            st.plotly_chart(fig_10, key="right_3D_plot")
 
         return  # return of "csv_dataset()" -> NO return value!
 
