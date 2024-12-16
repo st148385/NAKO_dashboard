@@ -19,11 +19,11 @@ TICK_FREQUENCY = 5
 
 
 def create_plotly_histogram(
-    data: pd.DataFrame,
-    x_axis: str,
-    feature_dict: Dict[str, Any],
-    groupby: str = None,
-    mapping_dict: Dict[int, str] = False,
+        data: pd.DataFrame,
+        x_axis: str,
+        feature_dict: Dict[str, Any],
+        groupby: str = None,
+        mapping_dict: Dict[int, str] = False,
 ):
     """Create histogram figure
 
@@ -49,40 +49,40 @@ def create_plotly_histogram(
         barmode="overlay",
     )
 
-	fig.update_layout(
-		title={
-			"text": f"{x_axis}-distribution after filtering",
-			"y": 0.9,
-			"x": 0.5,
-			"xanchor": "center",
-			"yanchor": "top",
-		}
-	)
-	if feature_dict.get(x_axis)["type"] in {"binary", "ordinal", "nominal"}:
-		tick_frequency = TICK_FREQUENCY if len(mapping_dict[x_axis].keys()) > TICK_FREQUENCY else 1
-		fig.update_xaxes(
-			tickvals=[key for i, (key, _) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
-			ticktext=[val for i, (_, val) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
-		)
+    fig.update_layout(
+        title={
+            "text": f"{x_axis}-distribution after filtering",
+            "y": 0.9,
+            "x": 0.5,
+            "xanchor": "center",
+            "yanchor": "top",
+        }
+    )
+    if feature_dict.get(x_axis)["type"] in {"binary", "ordinal", "nominal"}:
+        tick_frequency = TICK_FREQUENCY if len(mapping_dict[x_axis].keys()) > TICK_FREQUENCY else 1
+        fig.update_xaxes(
+            tickvals=[key for i, (key, _) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
+            ticktext=[val for i, (_, val) in enumerate(mapping_dict[x_axis].items()) if i % tick_frequency == 0],
+        )
 
-	# Rename legend
-	if mapping_dict.get(groupby):
-		for label, label_name in mapping_dict.get(groupby).items():
-			fig.update_traces(
-				{"name": str(label_name).replace("'", "")},
-				selector={"name": str(copy.copy(label))},
-			)
+    # Rename legend
+    if mapping_dict.get(groupby):
+        for label, label_name in mapping_dict.get(groupby).items():
+            fig.update_traces(
+                {"name": str(label_name).replace("'", "")},
+                selector={"name": str(copy.copy(label))},
+            )
 
-	return fig
+    return fig
 
 
 def create_plotly_scatterplot(
-    data: pd.DataFrame,
-    feature1: str,
-    feature2: str,
-    feature_dict: Dict[str, Any],
-    groupby: Union[List[str], str],
-    mapping_dict: Dict[int, str] = False,
+        data: pd.DataFrame,
+        feature1: str,
+        feature2: str,
+        feature_dict: Dict[str, Any],
+        groupby: Union[List[str], str],
+        mapping_dict: Dict[int, str] = False,
 ):
     """_summary_
 
@@ -125,28 +125,28 @@ def create_plotly_scatterplot(
         height=800,
     )
 
-	if feature_dict.get(feature1)["type"] in {"binary", "ordinal", "nominal"}:
-		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature1].keys()) > TICK_FREQUENCY else 1
-		fig.update_xaxes(
-			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
-			ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
-		)
+    if feature_dict.get(feature1)["type"] in {"binary", "ordinal", "nominal"}:
+        tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature1].keys()) > TICK_FREQUENCY else 1
+        fig.update_xaxes(
+            tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
+            ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature1].items()) if i % tick_frequency == 0],
+        )
 
-	if feature_dict.get(feature2)["type"] in {"binary", "ordinal", "nominal"}:
-		tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature2].keys()) > TICK_FREQUENCY else 1
-		fig.update_yaxes(
-			tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
-			ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
-		)
+    if feature_dict.get(feature2)["type"] in {"binary", "ordinal", "nominal"}:
+        tick_frequency = TICK_FREQUENCY if len(mapping_dict[feature2].keys()) > TICK_FREQUENCY else 1
+        fig.update_yaxes(
+            tickvals=[key for i, (key, _) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
+            ticktext=[val for i, (_, val) in enumerate(mapping_dict[feature2].items()) if i % tick_frequency == 0],
+        )
 
-	if mapping_dict.get(groupby[0]):
-		# Rename legend
-		for label, label_name in mapping_dict.get(groupby[0]).items():
-			fig.update_traces(
-				{"name": str(label_name).replace("'", "")},
-				selector={"name": str(label)},
-			)
-	return fig
+    if mapping_dict.get(groupby[0]):
+        # Rename legend
+        for label, label_name in mapping_dict.get(groupby[0]).items():
+            fig.update_traces(
+                {"name": str(label_name).replace("'", "")},
+                selector={"name": str(label)},
+            )
+    return fig
 
 
 def create_plotly_heatmap(data: pd.DataFrame, cmap: str = "RdBu_r", zmin: float = -1, zmax: float = 1):
@@ -194,7 +194,7 @@ def plot_f_of_xy(BMI, age, hand_strength, z_name="default (unit)", elev=20., azi
                 average_hand_strength[i, j] = np.nan  # Handle empty groups
 
     # Handle NaNs for visualization (optional) - currently unused, i.e., NO effect because NaN's are changed to np.nan
-    avg_hand_strength = np.nan_to_num(average_hand_strength, nan=np.nan)    # Change np.nan to any number to use this
+    avg_hand_strength = np.nan_to_num(average_hand_strength, nan=np.nan)  # Change np.nan to any number to use this
 
     # Create a meshgrid for the plot
     BMI_grid, age_grid = np.meshgrid(BMI_bins, age_bins)
@@ -263,9 +263,10 @@ def create_plotly_f_of_xy(BMI, age, height_var, height_label="r-hand strength (k
     # The first column and first row are probably 0 for any height variable. They at least are for hand str and systole
     # Let's remove the first row and first column of x, y and z to have the 3D plot start from heights != 0
     if dont_start_from_height_zero is True:
-        age_grid = age_grid[1:, :]   # all columns but not all rows, skip first row (row 0)
-        BMI_grid = BMI_grid[:, 1:]   # all rows but not all columns, skip first column (col 0)
-        average_hand_strength = average_hand_strength[1:, 1:]   # Skip first col AND first row (there only zero entries in those)
+        age_grid = age_grid[1:, :]  # all columns but not all rows, skip first row (row 0)
+        BMI_grid = BMI_grid[:, 1:]  # all rows but not all columns, skip first column (col 0)
+        average_hand_strength = average_hand_strength[1:,
+                                1:]  # Skip first col AND first row (there only zero entries in those)
 
     # Create a 3D surface plot using Plotly
     fig = go.Figure(data=[go.Surface(z=average_hand_strength.T, x=BMI_grid, y=age_grid, colorscale='Viridis')])
@@ -288,7 +289,8 @@ def create_plotly_f_of_xy(BMI, age, height_var, height_label="r-hand strength (k
     return fig
 
 
-def create_count_matrix(df, height_var="PWC130", type="count", age_bins=None, BMI_bins=None, streamlit_choose_bins=False):
+def create_count_matrix(df, height_var="PWC130", type="count", age_bins=None, BMI_bins=None,
+                        streamlit_choose_bins=False):
     """
     Creates a pd.DataFrame (matrix). Elements of the matrix show the number of occurrences (only if type="count") of
     "height_var" entries (default: PWC130 entries) in the inputted "df", depending on age groups and BMI groups.
@@ -346,7 +348,6 @@ def create_count_matrix(df, height_var="PWC130", type="count", age_bins=None, BM
     age_groups = np.clip(age_groups, 1, len(age_bins) - 1)
     BMI_groups = np.clip(BMI_groups, 1, len(BMI_bins) - 1)
 
-
     # Create a new DataFrame with these groups
     df['AgeGroup'] = age_groups  # E.g. age = 25,35,45 -> age_groups = 1,2,3  // for groups (18-29, 30-40, 40-50)
     df['BMIGroup'] = BMI_groups
@@ -397,17 +398,17 @@ def create_count_matrix(df, height_var="PWC130", type="count", age_bins=None, BM
                       f"original numbers. "
                       f"\nFor reference, the exception was: \n{e}")
     # finally:
-        # if exception_occurred:
-        #     print("TODO: The 'fix' below doesn't work. It correctly changes the column names and row names of the "
-        #           "matrix -- but in num_occurrences_matrix.reindex, all actual matrix entries, i.e., all non-zero "
-        #           "elements that show the counts/number of occurrences, are changed to 0!")
-            # full_index = pd.Index(range(1, len(age_bins)), name='AgeGroup')
-            # full_columns = pd.Index(range(1, len(BMI_bins)), name='BMIGroup')
-            # num_occurrences_matrix = num_occurrences_matrix.reindex(index=full_index, columns=full_columns,
-            #                                                         fill_value=0)
-            # # Assign the correct labels to the index and columns
-            # num_occurrences_matrix.index = age_labels
-            # num_occurrences_matrix.columns = BMI_labels
+    # if exception_occurred:
+    #     print("TODO: The 'fix' below doesn't work. It correctly changes the column names and row names of the "
+    #           "matrix -- but in num_occurrences_matrix.reindex, all actual matrix entries, i.e., all non-zero "
+    #           "elements that show the counts/number of occurrences, are changed to 0!")
+    # full_index = pd.Index(range(1, len(age_bins)), name='AgeGroup')
+    # full_columns = pd.Index(range(1, len(BMI_bins)), name='BMIGroup')
+    # num_occurrences_matrix = num_occurrences_matrix.reindex(index=full_index, columns=full_columns,
+    #                                                         fill_value=0)
+    # # Assign the correct labels to the index and columns
+    # num_occurrences_matrix.index = age_labels
+    # num_occurrences_matrix.columns = BMI_labels
 
     # Visualize the matrix using a heatmap
     fig = plt.figure(figsize=(10, 6))
@@ -449,6 +450,7 @@ def height_label_naming(height_variable_option):
         height_label = f"{height_variable_option} (a.u.)"
 
     return height_label
+
 
 if __name__ == "__main__":
     import numpy as np
