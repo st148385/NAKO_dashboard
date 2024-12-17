@@ -564,7 +564,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             gender_option = st.selectbox(
                 'Select gender to filter data (chosen gender will be visualized):',
                 ('Male', 'Female', 'All'),
-                key="Select_gender_for_left_3D_plot"
+                key="Select_gender_for_left_3D_plot",
+                index=0     # First option ('Male') is default choice
             )
 
             use_above_groups_left = st.checkbox("Use above $$\\uparrow$$ custom BMI and age groups",
@@ -633,7 +634,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             gender_option_10 = st.selectbox(
                 'Select gender to filter data (chosen gender will be visualized):',
                 ('Male', 'Female', 'All'),
-                key="Select_gender_for_right_3D_plot"
+                key="Select_gender_for_right_3D_plot",
+                index=1     # Second option ('Female') is default choice
             )
 
             use_above_groups_right = st.checkbox("Use above $$\\uparrow$$ custom BMI and age groups",
