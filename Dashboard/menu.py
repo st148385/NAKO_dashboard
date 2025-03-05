@@ -1,3 +1,13 @@
+# Remember that I changed the git remote to actual github instead of tik github:
+# (venv) PS C:\Users\mariu\PycharmProjects\students\s1465> git config --local credential.helper ""
+# (venv) PS C:\Users\mariu\PycharmProjects\students\s1465> git remote -v
+# origin  https://github.tik.uni-stuttgart.de/ac143312/NAKO_dashboard (fetch)
+# origin  https://github.tik.uni-stuttgart.de/ac143312/NAKO_dashboard (push)
+# (venv) PS C:\Users\mariu\PycharmProjects\students\s1465> git remote set-url origin https://github.com/st148385/NAKO_dashboard
+# (venv) PS C:\Users\mariu\PycharmProjects\students\s1465> git remote -v
+# origin  https://github.com/st148385/NAKO_dashboard (fetch)
+# origin  https://github.com/st148385/NAKO_dashboard (push)
+
 from pathlib import Path
 from typing import Union
 
@@ -73,7 +83,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             mri_folder = Path(root_dir) / mri_folder
             mri_data = read_mri_data_from_folder(mri_folder)
             # TODO add feature description
-            data = pd.merge(data, mri_data, on="ID")
+            data = pd.merge(data, mri_data, on="ID")        # Add <how="left"> if you don't want to remove ppl w/o MRI
 
         # Process data.
         # 1. Extract general for specific features using metadata and html
