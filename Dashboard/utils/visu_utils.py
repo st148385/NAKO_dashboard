@@ -224,6 +224,7 @@ def plot_f_of_xy(BMI, age, hand_strength, z_name="default (unit)", elev=20., azi
     if streamlit is not True:
         plt.show()
 
+    # <<<ATTENTION: CURRENTLY USING THE PLOTLY FUNCTION BELOW INSTEAD OF THIS ONE!!>>>
     return fig
 
 

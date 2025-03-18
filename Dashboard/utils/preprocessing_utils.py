@@ -179,6 +179,7 @@ def get_iqr_filtered_data(data: pd.DataFrame, feature_dict: Dict[str, str]) -> p
     selected_features = [
         feat for feat, feat_info in feature_dict.items() if feat_info["type"] not in {"nominal", "binary", "ordinal"}
     ]
+    selected_features.remove("sa_hba1c")        # To turn-off outlier removal for one feature, add this
     sub_df = data[selected_features]
     Q1 = sub_df.quantile(0.25)
     Q3 = sub_df.quantile(0.75)
@@ -320,7 +321,8 @@ def manually_filter_and_merge_data(df: pd.DataFrame, mapping_dict: Dict[int, str
         }
     )
 
-    # TODO: Error! all values of df["sa_hba1c"] > 46 have been changed to nan before entering this part! Where does this happen??
+    # When outlier removal (using IQR for bounds) is on for hba1c, all df["sa_hba1c"] > 46 are changed to nan!
+    # Also some very low hba1c measurements are removed. See function def get_iqr_filtered_data() further above
     if len(df) < 15_000:  # 13k dataset was loaded, which is the only one including HbA1c and oGTT!!
         df['3_class_diabetes'] = get_diabetes_3classes_from_hba1c(df)
         mapping_dict['3_class_diabetes'] = copy.deepcopy(mapping_dict['d_an_met_1'])
