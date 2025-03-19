@@ -321,6 +321,30 @@ def manually_filter_and_merge_data(df: pd.DataFrame, mapping_dict: Dict[int, str
         }
     )
 
+    if "sa_hba1c" in df:
+        df["healthy_hba1c_under_42"] = df["sa_hba1c"].where(df["sa_hba1c"] < 42)
+        df["prediabetes_hba1c_between_42_48"] = df["sa_hba1c"].where(df["sa_hba1c"].between(42, 48, inclusive="left"))
+        df["diabetes_hba1c_over_48"] = df["sa_hba1c"].where(df["sa_hba1c"] >= 48)
+
+        for hba1c_col in ["healthy_hba1c_under_42", "prediabetes_hba1c_between_42_48", "diabetes_hba1c_over_48"]:
+            mapping_dict[hba1c_col] = copy.deepcopy(mapping_dict['d_usa_sat1'])
+            feature_dict[hba1c_col] = copy.deepcopy(feature_dict['d_usa_sat1'])
+
+        feature_dict["healthy_hba1c_under_42"].update({
+            "info_text": "HbA1c values below 42 mmol/mol (healthy range)",
+            "type": "numeric",
+        })
+
+        feature_dict["prediabetes_hba1c_between_42_48"].update({
+            "info_text": "HbA1c values between 42 and 48 mmol/mol (prediabetes range)",
+            "type": "numeric",
+        })
+
+        feature_dict["diabetes_hba1c_over_48"].update({
+            "info_text": "HbA1c values above 48 mmol/mol (diabetes range)",
+            "type": "numeric",
+        })
+
     # When outlier removal (using IQR for bounds) is on for hba1c, all df["sa_hba1c"] > 46 are changed to nan!
     # Also some very low hba1c measurements are removed. See function def get_iqr_filtered_data() further above
     if len(df) < 15_000:  # 13k dataset was loaded, which is the only one including HbA1c and oGTT!!
