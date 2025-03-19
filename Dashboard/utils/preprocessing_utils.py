@@ -179,7 +179,8 @@ def get_iqr_filtered_data(data: pd.DataFrame, feature_dict: Dict[str, str]) -> p
     selected_features = [
         feat for feat, feat_info in feature_dict.items() if feat_info["type"] not in {"nominal", "binary", "ordinal"}
     ]
-    selected_features.remove("sa_hba1c")        # To turn-off outlier removal for one feature, add this
+    if "sa_hba1c" in selected_features:
+        selected_features.remove("sa_hba1c")        # To turn-off outlier removal for one feature, add this
     sub_df = data[selected_features]
     Q1 = sub_df.quantile(0.25)
     Q3 = sub_df.quantile(0.75)
@@ -321,7 +322,7 @@ def manually_filter_and_merge_data(df: pd.DataFrame, mapping_dict: Dict[int, str
         }
     )
 
-    if "sa_hba1c" in df:
+    if "sa_hba1c" in df.columns:
         df["healthy_hba1c_under_42"] = df["sa_hba1c"].where(df["sa_hba1c"] < 42)
         df["prediabetes_hba1c_between_42_48"] = df["sa_hba1c"].where(df["sa_hba1c"].between(42, 48, inclusive="left"))
         df["diabetes_hba1c_over_48"] = df["sa_hba1c"].where(df["sa_hba1c"] >= 48)
