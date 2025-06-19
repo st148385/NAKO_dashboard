@@ -28,7 +28,7 @@ from utils.preprocessing_utils import (
 )
 from utils.reading_utils import read_csv_file_cached
 from utils.visu_utils import (create_plotly_heatmap, create_plotly_histogram, create_plotly_scatterplot,
-                              create_plotly_f_of_xy, create_count_matrix, height_label_naming)
+                              create_plotly_f_of_xy, create_count_matrix, height_label_naming, format_number)
 
 if "_dataset_configuration_button" not in st.session_state:
     st.session_state.dataset_configuration_button = False
@@ -221,6 +221,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
         # Create a grouped KDE plot
         if continuous_feature and discrete_feature:
 
+            report_means, report_std = [], []
             st.markdown(f"### Distribution: {continuous_feature} grouped by {discrete_feature}")
 
             if pd.api.types.is_numeric_dtype(filtered_data[discrete_feature]):
@@ -252,6 +253,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             for group in filtered_data_filtered_again_for_discrete_features[discrete_feature].unique():
                 group_data = filtered_data_filtered_again_for_discrete_features[filtered_data[discrete_feature] == group][continuous_feature]
                 mean, std = group_data.mean(), group_data.std()  # Calculate mean and std
+                report_means.append(mean)
+                report_std.append(std)
                 x = np.linspace(group_data.min(), group_data.max(), 100)
                 # y = norm.pdf(x, mean, std) * len(group_data) * (
                 #             group_data.max() - group_data.min()) / 30  # Scale for histogram
@@ -260,9 +263,9 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                              filtered_data_filtered_again_for_discrete_features[continuous_feature].min()) / 30
                 y = norm.pdf(x, mean, std) * len(group_data) * bin_width  # Correct scaling
                 # y = norm.pdf(x, mean, std) * (1 / (std * np.sqrt(2 * np.pi)))  # Normalized Gaussian
-                ax.plot(x, y, label=f"Gaussian Fit: {group}", linewidth=2, color=colors[group])
+                ax.plot(x, y, label=f"Gaussian Fit: {group} \n $\mu \pm s = {format_number(mean)} \pm {format_number(std)}$", linewidth=2, color=colors[group])
 
-            ax.legend(title=discrete_feature)
+            ax.legend(title=discrete_feature, loc="center left", bbox_to_anchor=(1, 0.5))
             ax.set_title(f"Distribution of {continuous_feature} by {discrete_feature}")
             ax.set_xlabel(continuous_feature)
             ax.set_ylabel("Count")
@@ -273,6 +276,10 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
             with st.columns([1,2,1])[1]:
                 st.pyplot(fig, use_container_width=False)
+
+                # if report_means is not [] and report_std is not []:
+                #     for current_mean, current_std in zip(report_means, report_std):
+                #         st.write(f"$\mu \pm std = {current_mean.round(3)} \pm {current_std.round(3)}$")
 
 
 # -----------
@@ -391,7 +398,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
             the correlation describes the linear behaviour.\n
             Spearman: Calculation takes longer due to rank statistics. The correlation describes the monotonicity. \n
             Kendall: Also rank based correlation. Describes monotonicity. \n
-            TODO: Add Xicorr. The calculation takes longer but it describes the if Y is dependent on X.
+            TODO: Add Xicorr. The calculation takes longer but it describes if Y is dependent on X.
             This correlation might be the most useful one, if the features are non-linearly dependent.
             """,
         )
@@ -476,8 +483,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
                     "$ f \\left( \\mathrm{BMI}_\\mathrm{group}, \\mathrm{Age}_\\mathrm{group} \\right) $, "
                     "the following matrix can be used to visualize the number of occurrences for the chosen variable "
                     "$f$.  "
-                    "I.e., check for and ignore outliers when there aren't representative or use other groups to "
-                    "remove any non-representative entries of the subsequent 3D plot.")
+                    "I.e., check for and ignore outliers when they aren't representative or choose different subgroups "
+                    "to remove any non-representative entries of the subsequent 3D plot.")
 
         height_variable_option_col78 = st.selectbox(
             "Choose the attribute you wish to get more info about.",
@@ -500,7 +507,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
             visualized_data_male = filtered_data[filtered_data["basis_sex"] == 1]
 
-            default_age_bins_male = [18, 30, 40, 50, 60, 70, round(visualized_data_male["basis_age"].max())]
+            default_age_bins_male = [visualized_data_male["basis_age"].min(), 30, 40, 50, 60, 70, round(visualized_data_male["basis_age"].max())]
             default_BMI_bins_male = [0, 18.5, 25, 30, 35,
                                      round(max(visualized_data_male["anthro_gew"] / (
                                              visualized_data_male["anthro_groe"] / 100) ** 2), 1)]
@@ -527,7 +534,7 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
             visualized_data_female = filtered_data[filtered_data["basis_sex"] == 2]
 
-            default_age_bins_female = [18, 30, 40, 50, 60, 70, round(visualized_data_female["basis_age"].max())]
+            default_age_bins_female = [visualized_data_male["basis_age"].min(), 30, 40, 50, 60, 70, round(visualized_data_female["basis_age"].max())]
             default_BMI_bins_female = [0, 18.5, 25, 30, 35,
                                        round(max(visualized_data_female["anthro_gew"] / (
                                                visualized_data_female["anthro_groe"] / 100) ** 2), 1)]

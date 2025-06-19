@@ -453,6 +453,27 @@ def height_label_naming(height_variable_option):
     return height_label
 
 
+def format_number(val, threshold=1e3, precision=3, scientific=False):
+    """
+    Format a value for plot label based on size, e.g., 55.5924931 should be 55.59 for readability.
+     Similarly, large values like 51774.4218484209 should be 51.77k or 51.77E3.
+    - If `scientific` is True, uses scientific notation.
+    - Otherwise, uses 'k', 'M', 'B' notation for large values.
+    - Precision: Amount of digits after comma for small and large values.
+    """
+    if scientific:
+        return f"{val:.{precision}E}"
+    elif abs(val) >= threshold:
+        if abs(val) < 1e6:
+            return f"{val / 1e3:.{precision}f}k"
+        elif abs(val) < 1e9:
+            return f"{val / 1e6:.{precision}f}M"
+        else:
+            return f"{val / 1e9:.{precision}f}B"
+    else:
+        return f"{val:.{precision}f}"
+
+
 if __name__ == "__main__":
     import numpy as np
     import matplotlib.pyplot as plt

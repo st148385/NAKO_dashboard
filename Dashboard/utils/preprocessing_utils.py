@@ -13,7 +13,7 @@ from utils.reading_utils import (read_csv_file_cached, read_html_from_path, get_
                                  get_diabetes_3classes_from_hba1c)
 
 
-# THIS IS ALL ASSUMED TO BE STATIC, not really in general form
+# THIS IS ALL ASSUMED TO BE STATIC, not applicable for generally any CSVs
 def read_mri_data_from_folder(path: Union[str, Path]) -> pd.DataFrame:
     """Read the mri data and directly merge the features.
 
@@ -24,7 +24,7 @@ def read_mri_data_from_folder(path: Union[str, Path]) -> pd.DataFrame:
     """
     path = Path(path)
     csv_files = list(path.glob("*.csv"))
-    # Seperate CSV files to have fat fraction seperated.
+    # Separate CSV files to have fat fraction separated.
     # I want to easily drop all columns without mm2 or mm3 from the other files
     fat_fraction_csv = [
         csv_files.pop(i) for i, file_path in enumerate(csv_files) if file_path.stem.lower() == "fat_fractions"
@@ -321,6 +321,51 @@ def manually_filter_and_merge_data(df: pd.DataFrame, mapping_dict: Dict[int, str
             "type": "numeric",
         }
     )
+
+    # Average fat fraction for Gluteus (Glu)
+    df["avg_ff_Glu"] = (df["ff_Glu_left"] + df["ff_Glu_right"]) / 2
+    mapping_dict["avg_ff_Glu"] = copy.deepcopy(mapping_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Glu"] = copy.deepcopy(feature_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Glu"].update(
+        {
+            "info_text": "Average fat fraction of left and right gluteus",
+            "type": "numeric",
+        }
+    )
+
+    # Average fat fraction for Psoas (Pso)
+    df["avg_ff_Pso"] = (df["ff_Pso_left"] + df["ff_Pso_right"]) / 2
+    mapping_dict["avg_ff_Pso"] = copy.deepcopy(mapping_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Pso"] = copy.deepcopy(feature_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Pso"].update(
+        {
+            "info_text": "Average fat fraction of left and right psoas",
+            "type": "numeric",
+        }
+    )
+
+    # Average fat fraction for Extensors (Ext)
+    df["avg_ff_Ext"] = (df["ff_Ext_left"] + df["ff_Ext_right"]) / 2
+    mapping_dict["avg_ff_Ext"] = copy.deepcopy(mapping_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Ext"] = copy.deepcopy(feature_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Ext"].update(
+        {
+            "info_text": "Average fat fraction of left and right extensors",
+            "type": "numeric",
+        }
+    )
+
+    # Average fat fraction for Adductors (Add)
+    df["avg_ff_Add"] = (df["ff_Add_left"] + df["ff_Add_right"]) / 2
+    mapping_dict["avg_ff_Add"] = copy.deepcopy(mapping_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Add"] = copy.deepcopy(feature_dict['d_usa_sat1'])
+    feature_dict["avg_ff_Add"].update(
+        {
+            "info_text": "Average fat fraction of left and right adductors",
+            "type": "numeric",
+        }
+    )
+
 
     if "sa_hba1c" in df.columns:
         df["healthy_hba1c_under_42"] = df["sa_hba1c"].where(df["sa_hba1c"] < 42)
