@@ -684,8 +684,8 @@ def csv_dataset(root_dir: Union[str, Path], dataset: str):
 
             # Plot the data with plotly (for interactivity)
             if use_above_groups_right:
-                fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values,
-                                               height_label=height_label,
+                fig_10 = create_plotly_f_of_xy(BMI=BMI_10, age=age_10, height_var=height_values_10,
+                                               height_label=height_label_10,
                                                age_bins=age_bins_female, BMI_bins=BMI_bins_female,
                                                dont_start_from_height_zero=dont_start_3d_plot_from_zero_right)
             else:

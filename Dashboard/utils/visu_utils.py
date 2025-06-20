@@ -274,7 +274,7 @@ def create_plotly_f_of_xy(BMI, age, height_var, height_label="r-hand strength (k
 
     # Update layout for the plot
     fig.update_layout(
-        title='3D Plot: Average Hand Strength vs BMI and Age Groups',
+        title=f'3D Plot: {height_label} vs BMI and Age Groups',
         scene=dict(
             xaxis_title='BMI (kg/m²)',
             yaxis_title='Age (years)',
